@@ -122,13 +122,16 @@ ESOO.register({
               shape: { points: outline(cl, api), smooth: 0.3 },
               style: { fill: null, stroke: t.c('#290e2e'), lineWidth: t.size === 'sm' ? 1 : 1.25 },
             },
-            { type: 'circle', shape: { cx: b[0], cy: b[1], r: br }, style: { fill: badgeCol, stroke: t.surface, lineWidth: 1.5 } },
             {
+              // one element (number on a round background) so ECharts' hover layer redraws it whole
               type: 'text',
-              silent: true,
               x: b[0],
               y: b[1],
-              style: { text: String(cl.n), fill: '#ffffff', font: '700 ' + (br + 3) + 'px ' + t.font, align: 'center', verticalAlign: 'middle' },
+              style: {
+                text: String(cl.n), fill: '#ffffff', font: '700 ' + (br + 3) + 'px ' + t.font, align: 'center', verticalAlign: 'middle',
+                width: 2 * br, height: 2 * br, lineHeight: 2 * br, backgroundColor: badgeCol, borderRadius: br,
+                borderColor: t.surface, borderWidth: 1.5,
+              },
             },
           ],
         };

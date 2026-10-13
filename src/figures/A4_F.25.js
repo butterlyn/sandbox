@@ -3,7 +3,7 @@
 // The register holds this chart as a picture; it is rebuilt from the sheet's event table (Date,
 // Operational demand, Unserved Energy, Cause) as the same bubble chart: x = event date (time axis
 // Oct-26 to Oct-30, quarterly ticks), y = operational demand (MW), bubble area proportional to USE
-// (MWh) with a minimum dot size (largest bubble about 4.2% of the plot width, as in the picture),
+// (MWh) with a minimum dot size (largest bubble about 4.4% of the plot width, as in the picture),
 // colour = system conditions (legend colours sampled from the picture; 0.8 fill opacity like its
 // bubbles, with a thin surface-coloured ring instead of its dark outline). Each condition is split
 // into 2-px size bands (same series name, so the legend toggles them together; z rises as size
@@ -39,11 +39,11 @@ ESOO.register({
     function ts(iso) { return Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10)); }
     function isoOf(v) { return new Date(v).toISOString().slice(0, 10); }
 
-    // bubble diameter: area proportional to USE; largest about 4.2% of the plot width, minimum dot
+    // bubble diameter: area proportional to USE; largest about 4.4% of the plot width, minimum dot
     var plotW = Math.max(260, t.width - 72);
     var maxUse = 0;
     d.events.forEach(function (e) { maxUse = Math.max(maxUse, e[2]); });
-    var maxD = Math.min(48, Math.max(22, plotW * 0.042));
+    var maxD = Math.min(48, Math.max(22, plotW * 0.044));
     var minD = Math.min(8, Math.max(5, plotW * 0.0075));
     function diam(use) { return Math.max(minD, maxD * Math.sqrt(use / maxUse)); }
     // draw order: 2-px diameter bands, largest first, so small bubbles stay on top across conditions
