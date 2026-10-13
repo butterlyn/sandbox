@@ -133,7 +133,7 @@
           data: col['ESR (charge)'].map(neg),
           lineStyle: { width: 1, color: t.alpha(purple, 0.7) },
           areaStyle: { color: t.alpha(purple, 0.55), opacity: 1 },
-          itemStyle: { color: t.alpha(purple, 0.55) }, z: 2,
+          itemStyle: { color: t.alpha(purple, 0.55), borderColor: t.alpha(purple, 0.7), borderWidth: 1 }, z: 2,
         }, g);
       }
       function line(name, data, color, width, dash, g, y, z) {

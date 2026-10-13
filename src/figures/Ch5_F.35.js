@@ -94,7 +94,7 @@
         data: col['ESR (charge)'].map(function (v) { return v ? -v : 0; }),
         lineStyle: { width: 1, color: t.alpha(purple, 0.7) },
         areaStyle: { color: t.alpha(purple, 0.55), opacity: 1 },
-        itemStyle: { color: t.alpha(purple, 0.55) },
+        itemStyle: { color: t.alpha(purple, 0.55), borderColor: t.alpha(purple, 0.7), borderWidth: 1 }, // border: legend swatch
         z: 2,
       }].concat(STACK.map(function (s) {
         var c = t.c(s[2]);
