@@ -74,11 +74,12 @@
         params = [].concat(params || []);
         if (!params.length) return '';
         var x = Math.round(params[0].axisValue);
-        var L = ESOO.live && ESOO.live[ID];
-        var hidden = (L && L.legendState) || {};
+        // page legend state (name -> false when switched off); ECharts only reports the nearest series
+        var live = ESOO.live && ESOO.live[ID];
+        var shown = (live && live.legendState) || {};
         var rows = [];
         series.forEach(function (s, k) {
-          if (hidden[s.name] === false) return;
+          if (shown[s.name] === false) return;
           rows.push({
             seriesName: s.name, seriesType: 'line', color: s.lineStyle.color,
             value: [x, valueAt(d.series[k], x, d.n)], axisValue: x,
