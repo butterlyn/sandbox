@@ -917,43 +917,129 @@
   function fileBase(id) {
     return '2026-wem-esoo-' + id.replace(/[^A-Za-z0-9._-]+/g, '_');
   }
-  /** Export a PNG with title and a canvas legend, rendered offscreen at a fixed width. */
+  /**
+   * Export a PNG: the plot is rendered offscreen at a fixed width with the figure's own option
+   * (zoom sliders removed, current legend selection applied), then the eyebrow, title, the same
+   * legend as the page and a source line are drawn around it on one canvas.
+   */
+  function firstColor(c) {
+    if (typeof c !== 'string') return '#888888';
+    if (/^(#|rgb|hsl)/i.test(c.trim())) return c;
+    var m = /#[0-9a-f]{3,8}\b|rgba?\([^)]+\)/i.exec(c);
+    return m ? m[0] : '#888888';
+  }
+  function wrapText(ctx, text, maxW) {
+    var words = String(text).split(/\s+/), lines = [], cur = '';
+    words.forEach(function (w) {
+      var tryLine = cur ? cur + ' ' + w : w;
+      if (ctx.measureText(tryLine).width > maxW && cur) { lines.push(cur); cur = w; } else cur = tryLine;
+    });
+    if (cur) lines.push(cur);
+    return lines;
+  }
   function exportPNG(id) {
     var fig = registry[id], d = getData(id), card = document.getElementById('fig-' + id);
-    var W = 1200;
+    var W = 1200, PR = 2, PAD = 28;
     var t = makeTheme(W);
     var opt = fig.option(d, t);
+    opt.dataZoom = asArray(opt.dataZoom).filter(function (z) { return z.type === 'inside'; });
     applyBase(opt, t);
+    opt.animation = false;
+    var state = (live[id] && live[id].legendState) || {};
     var items = fig.legend === false ? [] : fig.legendItems ? fig.legendItems(d, t) : deriveLegend(opt);
     if (fig.legendOrder) items = sortItems(items, fig.legendOrder);
-    var num = card.querySelector('.fig-num'), sec = card.querySelector('.fig-eyebrow span:not(.fig-num):not(.badge)');
-    var title = (num ? num.textContent : id) + (sec ? ' · ' + sec.textContent : '') + ' — ' + (card.querySelector('.fig-title') || {}).textContent;
-    var H = heightFor(fig, W) + 90 + Math.ceil(items.length / 4) * 22;
+    items = items.filter(function (it) { return state[it.name] !== false; });
+    var Hc = heightFor(fig, W);
     var div = document.createElement('div');
-    div.style.cssText = 'position:fixed;left:-99999px;top:0;width:' + W + 'px;height:' + H + 'px;';
+    div.style.cssText = 'position:fixed;left:-99999px;top:0;width:' + W + 'px;height:' + Hc + 'px;';
     document.body.appendChild(div);
-    var top = 64;
-    var own = asArray(opt.title).map(function (ti) {
-      if (typeof ti.top === 'number') ti.top += top;
-      return ti;
-    });
-    opt.title = [{ text: title, left: 16, top: 10, textStyle: { color: t.text, fontSize: 15, fontWeight: 600, fontFamily: t.font, width: W - 40, overflow: 'break' } }].concat(own);
-    asArray(opt.grid).forEach(function (g) { if (typeof g.top === 'number') g.top += top; else g.top = top + 36; });
-    if (items.length > 1) {
-      opt.legend = {
-        show: true, bottom: 8, left: 16, right: 16, itemWidth: 16, itemHeight: 10, itemGap: 18,
-        textStyle: { color: t.text2, fontSize: 12 },
-        data: items.map(function (it) { return { name: it.name, icon: it.shape === 'line' ? 'path://M0,4 L16,4 L16,6 L0,6 Z' : it.shape === 'dot' ? 'circle' : 'rect' }; }),
-      };
-      asArray(opt.grid).forEach(function (g) { g.bottom = (typeof g.bottom === 'number' ? g.bottom : 8) + 24 + Math.ceil(items.length / 4) * 22; });
-    }
-    var c = echarts.init(div, null, { renderer: 'canvas', width: W, height: H });
-    opt.animation = false;
+    var c = echarts.init(div, null, { renderer: 'canvas', width: W, height: Hc, devicePixelRatio: PR });
     c.setOption(opt, true);
-    var url = c.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: t.surface });
+    Object.keys(state).forEach(function (name) {
+      if (state[name] === false) c.dispatchAction({ type: 'legendUnSelect', name: name });
+    });
+    var url = c.getDataURL({ type: 'png', pixelRatio: PR, backgroundColor: t.surface });
     c.dispose();
     document.body.removeChild(div);
-    download(fileBase(id) + '.png', url);
+
+    var num = card.querySelector('.fig-num'), sec = card.querySelector('.fig-eyebrow span:not(.fig-num):not(.badge)');
+    var eyebrow = ((num ? num.textContent : id) + (sec ? '  ·  ' + sec.textContent : '')).toUpperCase();
+    var title = (card.querySelector('.fig-title') || {}).textContent || '';
+    var srcEl = card.querySelector('.fig-src');
+    var source = 'Source: AEMO, 2026 WEM ESOO. ' + (srcEl ? srcEl.textContent : '');
+    var serif = "'Source Serif 4', Georgia, serif";
+    var measure = document.createElement('canvas').getContext('2d');
+    measure.font = '600 22px ' + serif;
+    var titleLines = wrapText(measure, title, W - 2 * PAD);
+    measure.font = '13px ' + t.font;
+    // legend layout: rows of [key 22px + 7px + label], 20px apart
+    var rows = [[]], x = 0, maxW = W - 2 * PAD;
+    items.forEach(function (it) {
+      var label = it.label || it.name;
+      var w = 22 + 7 + Math.min(measure.measureText(label).width, maxW - 40) + 20;
+      if (x + w > maxW && rows[rows.length - 1].length) { rows.push([]); x = 0; }
+      rows[rows.length - 1].push({ it: it, label: label, x: x });
+      x += w;
+    });
+    var legendH = items.length > 1 ? rows.length * 22 + 8 : 0;
+    var headH = PAD + 18 + titleLines.length * 29 + 10 + legendH;
+    var footH = 36;
+    var H = headH + Hc + footH;
+    var cv = document.createElement('canvas');
+    cv.width = W * PR;
+    cv.height = H * PR;
+    var g = cv.getContext('2d');
+    g.scale(PR, PR);
+    g.fillStyle = t.surface;
+    g.fillRect(0, 0, W, H);
+    g.textBaseline = 'alphabetic';
+    g.fillStyle = t.muted;
+    g.font = '600 12px ' + t.font;
+    g.fillText(eyebrow, PAD, PAD + 8);
+    g.fillStyle = t.text;
+    g.font = '600 22px ' + serif;
+    titleLines.forEach(function (ln, i) { g.fillText(ln, PAD, PAD + 38 + i * 29); });
+    if (items.length > 1) {
+      var y0 = PAD + 18 + titleLines.length * 29 + 14;
+      g.font = '13px ' + t.font;
+      rows.forEach(function (row, r) {
+        var yc = y0 + r * 22 + 7;
+        row.forEach(function (cell) {
+          var it = cell.it, kx = PAD + cell.x, col = firstColor(it.color);
+          g.save();
+          g.fillStyle = col;
+          g.strokeStyle = col;
+          if (it.shape === 'line') {
+            g.lineWidth = 3;
+            g.setLineDash(it.dash ? [5, 3.5] : []);
+            g.beginPath(); g.moveTo(kx, yc); g.lineTo(kx + 22, yc); g.stroke();
+          } else if (it.shape === 'dot') {
+            g.beginPath(); g.arc(kx + 11, yc, 5, 0, Math.PI * 2); g.fill();
+          } else if (it.shape === 'box') {
+            g.lineWidth = 2; g.strokeRect(kx + 5, yc - 6, 12, 12);
+          } else {
+            g.fillRect(kx + 5, yc - 6, 12, 12);
+            if (it.decal) {
+              g.strokeStyle = t.surface; g.lineWidth = 1.5;
+              for (var k = -12; k < 12; k += 4) { g.beginPath(); g.moveTo(kx + 5 + k, yc + 6); g.lineTo(kx + 17 + k, yc - 6); g.stroke(); }
+              g.strokeStyle = col; g.strokeRect(kx + 5.5, yc - 5.5, 11, 11);
+            }
+          }
+          g.restore();
+          g.fillStyle = t.text2;
+          g.fillText(cell.label, kx + 29, yc + 4.5, maxW - cell.x - 29);
+        });
+      });
+    }
+    var img = new Image();
+    img.onload = function () {
+      g.drawImage(img, 0, headH, W, Hc);
+      g.fillStyle = t.muted;
+      g.font = '12px ' + t.font;
+      g.fillText(source, PAD, headH + Hc + 22, W - 2 * PAD);
+      download(fileBase(id) + '.png', cv.toDataURL('image/png'));
+    };
+    img.src = url;
   }
 
   // ------------------------------------------------------------------ rendering
