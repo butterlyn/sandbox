@@ -80,10 +80,11 @@
     var pct = function (px) { return (px / t.width) * 100 + '%'; };
     var left = t.size === 'sm' ? 52 : 54, right = t.size === 'sm' ? 12 : 16, gap = 66;
     var colW = g.cols === 2 ? (t.width - left - right - gap) / 2 : t.width - left - right;
-    return [0, 1, 2, 3, 4].map(function (p) {
+    var grids = [0, 1, 2, 3, 4].map(function (p) {
       var row = Math.floor(p / g.cols), col = p % g.cols;
       return { left: pct(left + col * (colW + gap)), width: pct(colW), top: TOP0 + row * g.pitch, height: g.plotH, containLabel: false };
     });
+    return { grids: grids, band: colW / 10 };
   }
 
   ESOO.register({
@@ -118,12 +119,14 @@
     },
     option: function (d, t) {
       var sm = t.size === 'sm';
-      var grids = layout(t);
+      var L = layout(t);
+      var grids = L.grids;
+      var rot = L.band < 30 ? 45 : 30; // the picture's 30°, steeper when the categories get narrow
       var xAxes = [], yAxes = [], series = [];
       var fmtAxis = function (v) { return t.fmt.num(v, 3) + '%'; };
       d.regions.forEach(function (r, p) {
         var color = COLORS[r.name] || '#999999';
-        var xa = t.cAxis({ data: d.years, rotate: sm ? 45 : 30, interval: 0 });
+        var xa = t.cAxis({ data: d.years, rotate: rot, interval: 0 });
         xa.gridIndex = p;
         xa.offset = 6;
         xa.axisLabel.fontSize = 11;
@@ -147,7 +150,7 @@
             dimensions: ['year', 'lo', 'q1', 'median', 'q3', 'hi', 'mean'], encode: { x: 0, y: [1, 5] }, data: boxes,
           };
         };
-        series.push(custom(BOX, glyph(t, color), 3, t.text2));
+        series.push(custom(BOX, glyph(t, color), 3, t.c(color)));
         series.push(custom(MEAN, meanGlyph(t), 4, t.c(MEANC)));
         var outs = [];
         r.out.forEach(function (list, i) { list.forEach(function (o) { outs.push([i, o[0], o[1], p]); }); });
@@ -158,29 +161,41 @@
         });
         var ml = t.markLine({ data: [{ yAxis: RS }], color: t.c(RED), width: 1.25, dash: [6, 4], label: false });
         ml.z = 6;
+        ml.precision = 10; // ECharts rounds markLine values to 2 decimals by default (0.0002 -> 0)
         series.push({ name: '_rs' + p, type: 'line', xAxisIndex: 2 * p, yAxisIndex: p, data: [], markLine: ml });
       });
 
+      var tip = t.tooltipItem({
+        title: function (p) {
+          var r = p.seriesType === 'scatter' ? p.value[3] : p.data.r;
+          return d.regions[r].name + ' · ' + d.years[p.value[0]];
+        },
+        lines: function (p) {
+          if (p.seriesType === 'scatter') {
+            return [['Outlier', sig(p.value[1]) + '%'], ['Iterations at this value', t.fmt.num(p.value[2], 0)]];
+          }
+          var s = d.regions[p.data.r].stats[p.data.k];
+          var pc = function (x) { return sig(x) + '%'; };
+          return [
+            ['Maximum', pc(s[6])], ['Upper whisker', pc(s[5])], ['Q3', pc(s[4])], ['Mean (dashed)', pc(s[7])],
+            ['Median', pc(s[3])], ['Q1', pc(s[2])], ['Lower whisker', pc(s[1])], ['Minimum', pc(s[0])],
+            ['Iterations', t.fmt.num(d.n[p.data.k], 0) + (s[8] + s[9] ? ' (' + t.fmt.num(s[8] + s[9], 0) + ' outliers)' : '')],
+          ];
+        },
+      });
+      // outlier markers are hollow (transparent fill), so give their tooltip key the outline colour
+      var itemFormatter = tip.formatter;
+      tip.formatter = function (p) {
+        if (p.seriesType !== 'scatter') return itemFormatter(p);
+        var q = {};
+        for (var k in p) q[k] = p[k];
+        q.color = t.c(OUTC);
+        return itemFormatter(q);
+      };
+
       return {
         grid: grids,
-        tooltip: t.tooltipItem({
-          title: function (p) {
-            var r = p.seriesType === 'scatter' ? p.value[3] : p.data.r;
-            return d.regions[r].name + ' · ' + d.years[p.value[0]];
-          },
-          lines: function (p) {
-            if (p.seriesType === 'scatter') {
-              return [['Outlier', sig(p.value[1]) + '%'], ['Iterations at this value', t.fmt.num(p.value[2], 0)]];
-            }
-            var s = d.regions[p.data.r].stats[p.data.k];
-            var pc = function (x) { return sig(x) + '%'; };
-            return [
-              ['Maximum', pc(s[6])], ['Upper whisker', pc(s[5])], ['Q3', pc(s[4])], ['Mean (dashed)', pc(s[7])],
-              ['Median', pc(s[3])], ['Q1', pc(s[2])], ['Lower whisker', pc(s[1])], ['Minimum', pc(s[0])],
-              ['Iterations', t.fmt.num(d.n[p.data.k], 0) + (s[8] + s[9] ? ' (' + t.fmt.num(s[8] + s[9], 0) + ' outliers)' : '')],
-            ];
-          },
-        }),
+        tooltip: tip,
         xAxis: xAxes,
         yAxis: yAxes,
         series: series,

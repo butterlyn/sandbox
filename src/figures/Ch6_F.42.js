@@ -78,7 +78,9 @@
     var Hp = H - 40 - 64, plotW = t.width - 58 - 16;
     var yv = function (v) { return 40 + ((YMAX - v) / YMAX) * Hp; };
     // picture: inset frame from 6.9% to 46.8% of the plot width, between 1.58% and 0.615% on the y axis
-    var left = Math.max(58 + 0.069 * plotW, 58 + 52), width = 0.4 * plotW;
+    // (at narrow widths the inset may widen to 260px so its year labels fit; the 2031-32 to 2033-34 boxes
+    // stay below it)
+    var left = Math.max(58 + 0.069 * plotW, 58 + 52), width = Math.min(0.55 * plotW, Math.max(0.4 * plotW, 260));
     var top = Math.round(yv(1.58)), h = Math.round(yv(0.615) - yv(1.58));
     return {
       stacked: false,
@@ -148,6 +150,7 @@
       var rs = function (xi, yi, label, w) {
         var ml = t.markLine({ data: [{ yAxis: RS }], color: t.c(RED), width: w, dash: [7, 5], label: label });
         ml.z = 9;
+        ml.precision = 10; // ECharts rounds markLine values to 2 decimals by default (0.0002 -> 0)
         return { name: '_rs' + xi, type: 'line', xAxisIndex: xi, yAxisIndex: yi, data: [], markLine: ml };
       };
       series.push(rs(0, 0, { show: true, position: sm ? 'insideStartTop' : 'insideEndTop', formatter: '0.0002%', color: t.c(RED), fontWeight: 700, fontSize: sm ? 12 : 14, distance: [4, 6] }, 2));

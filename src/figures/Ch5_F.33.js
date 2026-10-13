@@ -163,6 +163,7 @@
       var rs = function (xi, yi, label, w) {
         var ml = t.markLine({ data: [{ yAxis: RS }], color: t.c(RED), width: w, dash: [7, 5], label: label });
         ml.z = 9;
+        ml.precision = 10; // ECharts rounds markLine values to 2 decimals by default (0.0002 -> 0)
         return { name: '_rs' + xi, type: 'line', xAxisIndex: xi, yAxisIndex: yi, data: [], markLine: ml };
       };
       var series = [
@@ -195,13 +196,13 @@
       if (L.bg) grids.push({ left: L.bg.left, width: L.bg.width, top: L.bg.top, height: L.bg.height, containLabel: false, show: true, backgroundColor: t.surface, borderWidth: 0, z: 3 });
 
       var xMain = t.cAxis({ data: d.years, rotate: sm ? 45 : 0, interval: 0 });
+      xMain.offset = 8; // gap below the zero line, as in the picture
       var xJit = { type: 'value', gridIndex: 0, min: -0.5, max: n - 0.5, show: false };
       var xIns = t.cAxis({ data: d.years.slice(0, NI), interval: 0 });
       xIns.gridIndex = 1;
       xIns.z = 5;
       xIns.axisLine.show = false;
       xIns.axisLabel.fontSize = 11;
-      xMain.offset = 8; // gap below the zero line, as in the picture
       var yMain = t.vAxis({ name: 'Unserved Energy (%)', min: 0, max: YMAX, interval: 0.2, decimals: 3 });
       var yIns = t.vAxis({ name: L.stacked ? 'Detail, 2026-27 to 2030-31 (%)' : '', min: 0, max: IMAX, interval: 0.0005, decimals: 4 });
       yIns.gridIndex = 1;
