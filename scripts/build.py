@@ -82,10 +82,14 @@ def card(m, img_uri):
     if m['kind'] == 'image':
         imgs = m.get('images', [])
         cls = 'fig-img fig-img--grid' if len(imgs) > 1 else 'fig-img'
-        body = f'<div class="{cls}">' + ''.join(
-            f'<img src="{img_uri(i["src"])}" width="{i["w"]}" height="{i["h"]}" loading="lazy" decoding="async" '
-            f'alt="{e(m["label"] + ": " + m["title"] + (" (panel " + str(k + 1) + ")" if len(imgs) > 1 else ""))}">'
-            for k, i in enumerate(imgs)) + '</div>'
+        def one(k, i):
+            alt = i.get('caption') or (m['title'] + (f' (panel {k + 1})' if len(imgs) > 1 else ''))
+            tag = (f'<img src="{img_uri(i["src"])}" width="{i["w"]}" height="{i["h"]}" loading="lazy" '
+                   f'decoding="async" alt="{e(m["label"] + ": " + alt)}">')
+            if i.get('caption') and len(imgs) > 1:
+                return f'<figure class="fig-panel">{tag}<figcaption>{e(i["caption"])}</figcaption></figure>'
+            return tag
+        body = f'<div class="{cls}">' + ''.join(one(k, i) for k, i in enumerate(imgs)) + '</div>'
         actions = (f'<div class="fig-actions"><button class="btn" type="button" data-act="link">Copy link</button>'
                    f'{source_line(m)}</div>')
         return (f'<article class="fig" id="fig-{e(fid)}" data-fig="{e(fid)}" data-kind="image" '

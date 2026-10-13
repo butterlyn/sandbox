@@ -187,7 +187,10 @@ main { min-width: 0; display: grid; gap: 40px; }
 .fig-chart.is-error { display: grid; place-items: center; height: auto !important; min-height: 120px; padding: 20px; color: var(--ink-3); background: var(--bg); border-radius: 8px; text-align: center; font-size: 14px; }
 .fig-img { margin: 4px 0 0; display: grid; gap: 10px; }
 .fig-img img { display: block; width: 100%; max-width: 100%; height: auto; border-radius: 6px; background: #ffffff; }
-.fig-img--grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+.fig-img--grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 22px; }
+@media (max-width: 640px) { .fig-img--grid { grid-template-columns: minmax(0, 1fr); } }
+.fig-panel { margin: 0; display: grid; gap: 6px; align-content: start; }
+.fig-panel figcaption { font-size: 13px; line-height: 1.4; color: var(--ink-2); }
 .fig-notes { display: grid; gap: 3px; max-width: 86ch; font-size: 13px; line-height: 1.5; color: var(--ink-3); }
 .fig-notes p { margin: 0; }
 .fig-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding-top: 10px; margin-top: 2px; border-top: 1px solid var(--line); }

@@ -67,7 +67,10 @@ def main():
                     im = im.resize((MAX_W, round(im.height * MAX_W / im.width)), Image.LANCZOS)
                 name = f"{f['id']}-{i}.webp"
                 im.save(os.path.join(img_dir, name), 'WEBP', quality=84, method=6)
-                imgs.append({'src': 'img/' + name, 'w': im.width, 'h': im.height})
+                img = {'src': 'img/' + name, 'w': im.width, 'h': im.height}
+                if p.get('caption'):
+                    img['caption'] = p['caption']
+                imgs.append(img)
             m['images'] = imgs
         meta.append(m)
     with open(os.path.join(src, 'data', 'meta.json'), 'w') as fh:
