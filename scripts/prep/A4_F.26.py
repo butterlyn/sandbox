@@ -87,8 +87,22 @@ CLUSTERS = [
         ['2033-03-18', 2735], ['2033-03-06', 2865], ['2033-02-28', 3015], ['2033-02-28', 3165]]},
 ]
 
-# the event the picture's callout points at
+# the bullet each numbered cluster illustrates (appendix A4.6.2, page 59, verbatim)
+CLUSTER_TEXT = {
+    1: 'Summer events generally occur at high demand, occurring without specific causes, indicative of overall '
+       'shortfall of supply (aligned to supply demand balance for the outer years).',
+    2: 'Shoulder events occur at moderate demand levels due to increased Outages, generally due to higher planned '
+       'Outages in shoulder seasons.',
+    3: 'Winter events at higher demand levels are dominated by reduced renewables availability.',
+    4: 'Events in winter also occur at low demand, where low renewables combined with low SOC result in USE even '
+       'at low demand.',
+}
+for cl in CLUSTERS:
+    cl['text'] = CLUSTER_TEXT[cl['n']]
+
+# the event the picture's callout points at, and the label the picture gives it
 CALLOUT = ('2032-02-11', 5693.32)
+PUBLISHED_LABEL = '1,560 MWh'
 
 
 def cause_key(text):
@@ -139,7 +153,8 @@ out = {
     'xMax': PERIOD[1],
     'categories': [{'name': n, 'color': c} for _, n, c in present],
     'events': events,
-    'callout': {'date': hl[0], 'demand': hl[1], 'label': f'{float(f"{hl[2]:.3g}"):,.0f} MWh'},
+    'callout': {'date': hl[0], 'demand': hl[1], 'label': f'{float(f"{hl[2]:.3g}"):,.0f} MWh',
+                'published': PUBLISHED_LABEL},
     'clusters': CLUSTERS,
 }
 write(FID, out, sig=7)

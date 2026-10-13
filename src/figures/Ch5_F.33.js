@@ -153,12 +153,13 @@
       var custom = function (name, part, o, xi, yi, z, n0) {
         return {
           name: name, type: 'custom', xAxisIndex: xi, yAxisIndex: yi, z: z, clip: xi !== 0,
-          renderItem: glyph(t, part, o), itemStyle: { color: t.c(PURPLE) },
+          // series colour = legend/tooltip key colour (the glyph colours are set in glyph())
+          renderItem: glyph(t, part, o), itemStyle: { color: part === 'box' ? t.alpha(t.c(PURPLE), t.dark ? 0.6 : 0.45) : t.c(PURPLE) },
           dimensions: ['year', 'lo', 'q1', 'median', 'q3', 'hi', 'mean'], encode: { x: 0, y: [1, 5] },
           data: boxData(d, n0),
         };
       };
-      var rsLabel = { show: true, position: 'insideEndTop', formatter: '0.0002%', color: t.c(RED), fontWeight: 700, fontSize: sm ? 12 : 14, distance: [4, 6] };
+      var rsLabel = { show: true, position: sm ? 'insideStartTop' : 'insideEndTop', formatter: '0.0002%', color: t.c(RED), fontWeight: 700, fontSize: sm ? 12 : 14, distance: [4, 6] };
       var rs = function (xi, yi, label, w) {
         var ml = t.markLine({ data: [{ yAxis: RS }], color: t.c(RED), width: w, dash: [7, 5], label: label });
         ml.z = 9;
@@ -168,7 +169,7 @@
         custom(BOX, 'box', main, 0, 0, 2, n),
         {
           id: 'dots', name: DOTS, type: 'scatter', xAxisIndex: 1, yAxisIndex: 0, z: 3, clip: false,
-          large: true, largeThreshold: 2000, symbolSize: sm ? 3.5 : 5,
+          large: true, largeThreshold: 2000, progressive: 0, symbolSize: sm ? 3.5 : 5, // progressive: 0 so PNG export gets every dot
           itemStyle: { color: t.c(GREY), opacity: t.dark ? 0.35 : 0.45 }, data: dots,
         },
         custom(BOX, 'lines', main, 0, 0, 4, n),
