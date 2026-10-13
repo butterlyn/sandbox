@@ -218,7 +218,8 @@ def build(args):
         scripts.append('<script>\n' + script_safe(read(os.path.join(ROOT, f'vendor/echarts-{ECHARTS_VERSION}.min.js')), 'echarts') + '\n</script>')
     scripts.append('<script>\n' + common + '\n</script>')
     for fid, src in modules:
-        scripts.append(f'<script data-module="{e(fid)}">\ntry {{\n{src}\n}} catch (err) {{ (window.ESOO.errors = window.ESOO.errors || []).push({{id: {json.dumps(fid)}, error: String(err && err.stack || err)}}); console.error("[ESOO] module {fid}", err); }}\n</script>')
+        # each module runs in its own function scope so top-level helpers can't collide across figures
+        scripts.append(f'<script data-module="{e(fid)}">\ntry {{ (function () {{\n{src}\n}})(); }} catch (err) {{ (window.ESOO.errors = window.ESOO.errors || []).push({{id: {json.dumps(fid)}, error: String(err && err.stack || err)}}); console.error("[ESOO] module {fid}", err); }}\n</script>')
     for fid, js in datas:
         scripts.append(f'<script type="application/json" id="d-{e(fid)}">{json_script(js)}</script>')
     scripts.append('<script>ESOO.boot();</script>')

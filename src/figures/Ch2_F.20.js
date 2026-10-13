@@ -3,8 +3,10 @@
 // order Excel paints it: all areas, then columns, then the secondary column, then lines.
 //  - Stacked areas: operational demand (grey) under PV and PVNSG (actuals) / PV (forecast). Excel
 //    stacks areas algebraically with blanks as zero (stackStrategy 'all') and, as the published
-//    figure shows, fills them down to the axis minimum (-500). Their legend entries are deleted in
-//    Excel; the chart's own text boxes label them instead (reproduced as in-plot labels).
+//    figure shows, fills them down to the axis minimum (-500). The two same-coloured PV series are
+//    drawn as one polygon (no seam); they stay in the readout and table under their own names.
+//    Their legend entries are deleted in Excel; the chart's own text boxes label the areas instead
+//    (reproduced as in-plot labels).
 //  - Secondary areas: the 550 MW management minimum and 300 MW technical envelope bands, also filled
 //    from -500. The register's third band (row 61, -500 MW) has zero height there and is omitted.
 //  - ESR columns float on the forecast demand (invisible base, gap width 30). Excel builds the
