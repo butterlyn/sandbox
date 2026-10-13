@@ -164,7 +164,7 @@ def build(args):
     built = dt.date.today().isoformat()
     style = read(os.path.join(ROOT, 'src/styles.css'))
     common = script_safe(read(os.path.join(ROOT, 'src/lib/common.js')), 'common.js')
-    build_cfg = {'downloads': not args.artifact, 'eager': bool(args.only) or args.eager, 'built': built}
+    build_cfg = {'downloads': not args.artifact, 'links': not args.artifact, 'eager': bool(args.only) or args.eager, 'built': built}
 
     head = (f'<title>{TITLE}</title>\n'
             f'<meta name="description" content="Interactive versions of the figures in AEMO\'s 2026 WEM Electricity '

@@ -1307,6 +1307,7 @@
       });
     }
     if (!ESOO.canDownload) document.querySelectorAll('[data-act="csv"],[data-act="png"]').forEach(function (b) { b.hidden = true; });
+    if (BUILD.links === false) document.querySelectorAll('[data-act="link"]').forEach(function (b) { b.hidden = true; });
     // contents rail: mark the figure nearest the top of the viewport
     if ('IntersectionObserver' in window && document.querySelector('.toc')) {
       var current = null;

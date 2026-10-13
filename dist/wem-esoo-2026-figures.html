@@ -277,7 +277,7 @@ main { min-width: 0; display: grid; gap: 40px; }
   <p>Figures marked “Rebuilt from sheet data” are pasted images in the register; their charts here are drawn from the data tables on the same sheets. Diagrams and maps have no data in the register and are shown as the original images.</p>
   <p>Source: Australian Energy Market Operator, 2026 Wholesale Electricity Market Electricity Statement of Opportunities. Page built 2026-10-13.</p>
 </footer></div>
-<script>window.ESOO_BUILD = {"downloads": true, "eager": false, "built": "2026-10-13"};</script>
+<script>window.ESOO_BUILD = {"downloads": true, "links": true, "eager": false, "built": "2026-10-13"};</script>
 <script>
 
 /*
@@ -1636,6 +1636,7 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
       });
     }
     if (!ESOO.canDownload) document.querySelectorAll('[data-act="csv"],[data-act="png"]').forEach(function (b) { b.hidden = true; });
+    if (BUILD.links === false) document.querySelectorAll('[data-act="link"]').forEach(function (b) { b.hidden = true; });
     // contents rail: mark the figure nearest the top of the viewport
     if ('IntersectionObserver' in window && document.querySelector('.toc')) {
       var current = null;
