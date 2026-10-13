@@ -26,7 +26,7 @@ ESOO.register({
       decimals: [0, 4, 1, 1],
       note: 'Availability curve = demand ranked in descending order + reserve margin, Intermittent Load allowance, Regulation Raise and ESROD Uplift (' + res + '). ' +
         rows.length.toLocaleString('en-AU') + ' of ' + N.toLocaleString('en-AU') + ' ranked trading intervals are kept: every rank in the first ' + d.note.head +
-        ' and last ' + d.note.tail + ', then steps growing by ×' + d.note.ratio + ' up to every ' + d.note.step + 'th rank across the flat middle (within about 4 MW of the full curve).',
+        ' and last ' + d.note.tail + ', then steps growing by ×' + d.note.ratio + ' up to every ' + d.note.step + 'th rank across the flat middle (linear interpolation stays within ' + d.note.maxErr + ' MW of every original value).',
     };
   },
   option: function (d, t) {

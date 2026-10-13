@@ -1,13 +1,14 @@
 // Appendix Figure 27 (A4_F.27) — Simulated unserved energy duration, magnitude and frequency for 2030-31.
 // In the register this figure is a pasted picture; it is rebuilt from the sheet (B23:D63): one bubble per
 // duration bin (0.5 h) and magnitude bin (2.5% of average unscheduled operational demand), bubble AREA
-// proportional to frequency, as in the picture (diameter = k * sqrt(frequency), k scaled with the plot
-// size from the picture's 107 px on a 640 x 352 px plot; at least 3 px). The zero point (0 h, 0%, 71%) is drawn not to scale, as the
-// published figure notes. The shaded region "USE greater than the reliability standard" is not in the sheet:
-// its boundary, magnitude (%) = 1.752 / duration (h), was fitted to the register picture (see
-// scripts/prep/A4_F.27.py). The picture's size key (top right) is drawn in data coordinates so it stays
-// inside the plot in the PNG export; the region label of the picture is an HTML legend entry here.
-// An invisible '_hit' copy of the bubbles (at least 14 px) makes the smallest bubbles easy to hover.
+// proportional to frequency, as in the picture: diameter = 107 px * sqrt(frequency) on the picture's
+// 640 x 352 px plot, scaled with the plot size here (at least 3 px). The zero point (0 h, 0%, 71%) is drawn
+// not to scale, as the published figure notes. The shaded region "USE greater than the reliability
+// standard" is not in the sheet: its boundary, magnitude (%) = 1.752 / duration (h), was fitted to the
+// register picture (see scripts/prep/A4_F.27.py). The picture's size key (top right, boxed) is drawn in
+// data coordinates so it stays inside the plot in the PNG export; the picture's in-plot label for the
+// shaded region is an HTML legend entry here. An invisible '_hit' copy of the bubbles (at least 14 px)
+// makes the smallest bubbles easy to hover.
 (function () {
   var HEIGHT = { lg: 480, md: 460, sm: 420 };
   var REGION = 'USE greater than the reliability standard';

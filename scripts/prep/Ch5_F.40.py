@@ -96,9 +96,11 @@ def max_interp_error(vals):
 
 
 out = {'n': N, 'ranks': rk, 'years': []}
+worst = 0.0
 for y in years:
     avail = [y['demand'][r - 1] + y['reserve'] for r in rk]
     err = max_interp_error(y['demand'])
+    worst = max(worst, err)
     print(f"{y['name']}: {len(rk)} of {N} ranks kept, first {avail[0]:.1f} MW, last {avail[-1]:.1f} MW, "
           f"max interpolation error {err:.2f} MW")
     out['years'].append({
@@ -107,5 +109,5 @@ for y in years:
         'reserve': y['reserve'],
         'values': avail,
     })
-out['note'] = {'head': HEAD, 'tail': TAIL, 'step': STEP, 'ratio': RATIO}
+out['note'] = {'head': HEAD, 'tail': TAIL, 'step': STEP, 'ratio': RATIO, 'maxErr': round(worst, 1)}
 write(FID, out, sig=5)
