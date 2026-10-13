@@ -723,6 +723,26 @@ def parse_chart(pkg, path, theme):
                 chart_theme.scheme.setdefault(k, v)
     th = chart_theme
     spec = {'file': posixpath.basename(path)}
+    # shapes drawn inside the chart area (text boxes, arrows, braces): positions are fractions of the chart
+    shapes = []
+    for typ, tgt in crels.values():
+        if typ != 'chartUserShapes' or tgt not in pkg.names:
+            continue
+        CDR = '{http://schemas.openxmlformats.org/drawingml/2006/chartDrawing}'
+        for anc in pkg.xml(tgt):
+            fr, to = anc.find(CDR + 'from'), anc.find(CDR + 'to')
+            xy = lambda e: [round(float(e.find(CDR + 'x').text), 4), round(float(e.find(CDR + 'y').text), 4)] if e is not None else None
+            for shp in anc.iter():
+                tag = shp.tag.split('}')[1] if '}' in shp.tag else shp.tag
+                if tag not in ('sp', 'cxnSp', 'pic'):
+                    continue
+                geom = shp.find('.//a:prstGeom', NS)
+                txt = rich_text(shp.find(CDR + 'txBody')) if shp.find(CDR + 'txBody') is not None else None
+                shapes.append({'kind': tag, 'geom': geom.get('prst') if geom is not None else None, 'text': txt,
+                               'from': xy(fr), 'to': xy(to),
+                               'fill': parse_fill(shp.find(CDR + 'spPr'), th), 'line': parse_line(shp.find(CDR + 'spPr'), th)})
+    if shapes:
+        spec['userShapes'] = shapes
     t = chart.find('c:title', NS)
     if t is not None:
         spec['title'] = rich_text(t.find('c:tx', NS)) or (t.find('.//c:f', NS).text if t.find('.//c:f', NS) is not None else '(auto title)')
@@ -991,6 +1011,9 @@ def summarize(fig):
                     L.append(f"      {key}: {d.get('ref')} [{src}, n={n}]{extra}{hid}{mism}: {prev}")
         if ch.get('filteredSeries'):
             L.append(f"  FILTERED (hidden by chart filter, not displayed): {ch['filteredSeries']}")
+        for sh in ch.get('userShapes', []):
+            L.append(f"  DRAWN SHAPE {sh['kind']}/{sh['geom']} from {sh['from']} to {sh['to']} (fractions of chart)"
+                     + (f" text={sh['text']!r}" if sh.get('text') else ''))
     L.append('')
     L.append('=== Sheet cells (first 60 non-empty rows, row: col=value) ===')
     shown = 0
