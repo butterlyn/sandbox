@@ -509,6 +509,7 @@
     var fmt = o.format || (o.numFmt ? NF.excel(o.numFmt) : function (v) { return NF.num(v, o.decimals != null ? o.decimals : 0); });
     var exclude = typeof o.exclude === 'function' ? o.exclude : function (n) { return (o.exclude || []).indexOf(n) >= 0; };
     return {
+      _esoo: o, // applyBase records which line series are filled areas here (swatch keys)
       trigger: 'axis',
       confine: true,
       axisPointer: {
@@ -536,7 +537,7 @@
         if (o.sortByValue) rows.sort(function (a, b) { return paramValue(b) - paramValue(a); });
         var html = '<div class="tt"><div class="tt-head">' + esc(head) + '</div>';
         rows.forEach(function (p) {
-          var shape = p.seriesType === 'line' ? 'line' : p.seriesType === 'scatter' ? 'dot' : 'rect';
+          var shape = p.seriesType === 'line' ? (o._areas && o._areas[p.seriesName] ? 'rect' : 'line') : p.seriesType === 'scatter' ? 'dot' : 'rect';
           html += '<div class="tt-row">' + keyHtml(paramColor(p), shape) + '<b>' + esc(fmt(paramValue(p), p.seriesName)) + (o.unit ? ' ' + esc(o.unit) : '') + '</b><span>' + esc(p.seriesName) + '</span></div>';
         });
         if (o.total) {
@@ -629,6 +630,11 @@
       asArray(opt[k]).forEach(function (ax) { defaults(ax, axisDefaults); });
     });
     asArray(opt.tooltip).forEach(function (tt) {
+      if (tt._esoo) {
+        var areas = {};
+        asArray(opt.series).forEach(function (s) { if (s.type === 'line' && s.areaStyle) areas[s.name] = 1; });
+        tt._esoo._areas = areas;
+      }
       defaults(tt, {
         backgroundColor: t.surface,
         borderColor: t.line,
@@ -645,6 +651,7 @@
     });
     asArray(opt.series).forEach(function (s) {
       if (s.type === 'line' && s.symbol === undefined) s.symbol = 'none';
+      if (s.type === 'line' && s.areaStyle && s.emphasis === undefined) s.emphasis = { disabled: true }; // no colour lift on filled areas
       if ((s.type === 'line' || s.type === 'scatter') && s.emphasis === undefined) s.emphasis = { focus: 'none' };
       if (s.type === 'bar' && s.emphasis === undefined) s.emphasis = { focus: 'none' };
       if (s.type === 'line' && s.lineStyle && s.lineStyle.cap === undefined) {
