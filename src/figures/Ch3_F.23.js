@@ -10,12 +10,6 @@
   var ID = 'Ch3_F.23';
   var esc = ESOO.esc;
 
-  // the page draws lines with round caps; shift Excel's dash arrays so dashes and gaps survive the caps
-  function lineType(t, dash, w) {
-    var a = t.dash(dash, w);
-    if (!Array.isArray(a)) return a;
-    return a.map(function (v, i) { return i % 2 ? v + w : Math.max(0.01, v - w); });
-  }
   // CSS backgrounds for legend / tooltip keys, imitating Excel's pattern fills and dashes
   function fillCss(fg, prst, bg) {
     bg = bg || '#ffffff';
@@ -76,7 +70,7 @@
           name: l.name,
           type: 'line',
           data: l.values,
-          lineStyle: { color: t.c(l.color), width: w, type: lineType(t, l.dash, w) },
+          lineStyle: { color: t.c(l.color), width: w, type: t.dash(l.dash, w) },
           itemStyle: { color: t.c(l.color) },
           keyCss: lineCss(t.c(l.color), l.dash),
           connectNulls: false,

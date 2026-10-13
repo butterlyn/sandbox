@@ -41,12 +41,6 @@
     return d.bars.filter(function (b) { return b.status === 'existing'; }).reverse()
       .map(function (b) { return { name: b.tech, color: b.color }; });
   }
-  // the page draws lines with round caps; shift Excel's dash arrays so dots and gaps survive the caps
-  function lineType(t, dash, w) {
-    var a = t.dash(dash, w);
-    if (!Array.isArray(a)) return a;
-    return a.map(function (v, i) { return i % 2 ? v + w : Math.max(0.01, v - w); });
-  }
   // CSS background for legend / tooltip line keys, imitating the dash
   function keyCss(c, dash) {
     if (dash === 'sysDot') return 'repeating-linear-gradient(90deg,' + c + ' 0 2.5px,transparent 2.5px 5px)';
@@ -180,7 +174,7 @@
           name: l.name,
           type: 'line',
           data: l.values,
-          lineStyle: { color: t.c(l.color), width: w, type: lineType(t, l.dash, w) },
+          lineStyle: { color: t.c(l.color), width: w, type: t.dash(l.dash, w) },
           itemStyle: { color: t.c(l.color) },
           connectNulls: false,
           z: 3,
