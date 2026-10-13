@@ -638,6 +638,20 @@ def parse_axis(ax, theme):
         v = val(ax, f'c:{k}', int)
         if v is not None:
             a[k] = v
+    du = ax.find('c:dispUnits', NS)
+    if du is not None:
+        b = du.find('c:builtInUnit', NS)
+        cu = du.find('c:custUnit', NS)
+        units = {'hundreds': 1e2, 'thousands': 1e3, 'tenThousands': 1e4, 'hundredThousands': 1e5, 'millions': 1e6,
+                 'tenMillions': 1e7, 'hundredMillions': 1e8, 'billions': 1e9, 'trillions': 1e12}
+        if b is not None:
+            a['dispUnits'] = b.get('val')
+            a['dispUnitsDivisor'] = units.get(b.get('val'))
+        elif cu is not None:
+            a['dispUnitsDivisor'] = float(cu.get('val'))
+        lbl = du.find('c:dispUnitsLbl', NS)
+        if lbl is not None:
+            a['dispUnitsLabel'] = rich_text(lbl.find('c:tx', NS)) or a.get('dispUnits')
     nf = ax.find('c:numFmt', NS)
     if nf is not None:
         a['numFmt'] = nf.get('formatCode')
@@ -792,9 +806,10 @@ def parse_chart(pkg, path, theme):
     # which value axes are secondary (the second set of axes, usually crosses="max")
     ax_by_id = {a['id']: a for a in axes}
     if groups:
-        primary = set(groups[0]['axIds'])
+        # Excel writes the primary category/value axis pair first; any group not on it is secondary
+        primary = {a['id'] for a in axes[:2]} if len(axes) > 2 else set(groups[0]['axIds'])
         for g in groups:
-            g['secondary'] = set(g['axIds']) != primary
+            g['secondary'] = not (set(g['axIds']) & primary)
             g['axes'] = {ax_by_id[i]['kind'] + ('' if ax_by_id[i]['kind'] != 'valAx' else '') + ':' + i: ax_by_id[i].get('pos') for i in g['axIds'] if i in ax_by_id}
     return spec
 
@@ -878,15 +893,18 @@ def figure_meta(sheet, grid):
     for i, row in enumerate(grid.rows, start=1):
         if i <= 2:
             continue
-        for v in row:
-            if isinstance(v, str):
-                s = v.strip()
-                if re.match(r'^(Notes?|Source|Sources)\b', s, re.I) or (len(s) > 90 and not re.match(r'^[\d.,%-]+$', s)):
-                    if s not in notes:
-                        notes.append(s)
-        if i > 400 and len(row) and not any(isinstance(v, str) for v in row):
-            # past the header area of a long numeric table
+        strs = [v.strip() for v in row if isinstance(v, str) and v.strip()]
+        if not strs:
             continue
+        has_num = any(isinstance(v, (int, float)) and not isinstance(v, bool) for v in row)
+        for s in strs:
+            heading = re.match(r'^(Notes?|Sources?)\b', s, re.I)
+            # a note is a text-only row's bullet, sentence or Note/Source line, or any very long text cell
+            sentence = (s.endswith('.') or s.endswith('.)')) and len(s.split()) >= 4
+            bullet = re.match(r'^[–\-▪•·*]\s*\S', s) and len(s.split()) >= 3
+            if (heading or (not has_num and len(strs) <= 2 and (sentence or bullet)) or len(s) > 90) \
+                    and not re.match(r'^[\d.,%-]+$', s) and s not in notes:
+                notes.append(s)
     return {'number': number, 'title': title, 'fullTitle': full, 'section': sec,
             'sectionName': SECTIONS.get(sec, sec), 'doc': doc, 'notes': notes}
 
@@ -922,7 +940,7 @@ def summarize(fig):
         L.append(f"title={ch.get('title')!r} plotVisOnly={ch.get('plotVisOnly')} dispBlanksAs={ch.get('dispBlanksAs')} "
                  f"font={ch.get('font')} fontSize={ch.get('fontSize')} legend={ch.get('legend')}")
         for ax in ch['axes']:
-            keys = ['kind', 'id', 'pos', 'delete', 'orientation', 'min', 'max', 'majorUnit', 'numFmt', 'title',
+            keys = ['kind', 'id', 'pos', 'delete', 'orientation', 'min', 'max', 'majorUnit', 'numFmt', 'dispUnits', 'dispUnitsDivisor', 'title',
                     'crosses', 'crossesAt', 'crossBetween', 'tickLblPos', 'majorGridlines', 'labelRotation',
                     'labelFontSize', 'baseTimeUnit', 'majorTimeUnit', 'tickLblSkip', 'logBase']
             L.append('  AXIS ' + ' '.join(f"{k}={ax[k]!r}" for k in keys if k in ax))
@@ -938,7 +956,7 @@ def summarize(fig):
                 if fill:
                     sty.append('fill=' + ('none' if fill.get('none') else str(fill.get('hex'))) + (' (auto)' if fill.get('auto') else '') + (f" alpha={fill['alpha']}" if fill.get('alpha') else ''))
                 if line:
-                    sty.append('line=' + ('none' if line.get('none') else f"{line.get('color')} w={line.get('width_pt')}pt dash={line.get('dash')}") + (' (auto)' if line.get('auto') else ''))
+                    sty.append('line=' + ('none' if line.get('none') else f"{line.get('color')} w={line.get('width_pt')}pt dash={line.get('dash')}") + (' (auto)' if line.get('auto') else '') + (f" alpha={line['alpha']}" if line.get('alpha') else ''))
                 if s.get('marker'):
                     sty.append(f"marker={s['marker']}")
                 if s.get('smooth'):
@@ -1074,7 +1092,13 @@ def main():
                         media = drels[rid][1]
                         if media.endswith('image1.png'):
                             continue  # AEMO logo on every sheet
-                        fig['pictures'].append({'file': posixpath.basename(media), 'from': pos(frm), 'to': pos(to)})
+                        pic = {'file': posixpath.basename(media), 'from': pos(frm), 'to': pos(to)}
+                        if frm is not None:
+                            c0, r0 = pos(frm)
+                            cap = grid.get(r0, c0 + 1)  # 0-based anchor row r0 -> 1-based row above it
+                            if isinstance(cap, str) and cap.strip() and r0 > 2:
+                                pic['caption'] = cap.strip()
+                        fig['pictures'].append(pic)
         if fig['charts']:
             fig['kind'] = 'native'
         elif fig['pictures'] and len(grid.rows) > 22 and any(

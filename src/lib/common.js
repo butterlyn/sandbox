@@ -647,7 +647,11 @@
       if (s.type === 'line' && s.symbol === undefined) s.symbol = 'none';
       if ((s.type === 'line' || s.type === 'scatter') && s.emphasis === undefined) s.emphasis = { focus: 'none' };
       if (s.type === 'bar' && s.emphasis === undefined) s.emphasis = { focus: 'none' };
-      if (s.type === 'line' && s.lineStyle && s.lineStyle.cap === undefined) s.lineStyle.cap = 'round';
+      if (s.type === 'line' && s.lineStyle && s.lineStyle.cap === undefined) {
+        // round caps would swallow the gaps of t.dash() patterns, so dashed lines keep butt caps
+        var ty = s.lineStyle.type;
+        s.lineStyle.cap = Array.isArray(ty) || ty === 'dashed' || ty === 'dotted' ? 'butt' : 'round';
+      }
       if (s.label && s.label.show && s.label.color === undefined) s.label.color = t.text2;
       if (s.label && s.label.show && s.labelLayout === undefined) s.labelLayout = { hideOverlap: true };
     });
@@ -915,13 +919,18 @@
     applyBase(opt, t);
     var items = fig.legend === false ? [] : fig.legendItems ? fig.legendItems(d, t) : deriveLegend(opt);
     if (fig.legendOrder) items = sortItems(items, fig.legendOrder);
-    var title = (card.querySelector('.fig-eyebrow') || {}).textContent + ' — ' + (card.querySelector('.fig-title') || {}).textContent;
+    var num = card.querySelector('.fig-num'), sec = card.querySelector('.fig-eyebrow span:not(.fig-num):not(.badge)');
+    var title = (num ? num.textContent : id) + (sec ? ' · ' + sec.textContent : '') + ' — ' + (card.querySelector('.fig-title') || {}).textContent;
     var H = heightFor(fig, W) + 90 + Math.ceil(items.length / 4) * 22;
     var div = document.createElement('div');
     div.style.cssText = 'position:fixed;left:-99999px;top:0;width:' + W + 'px;height:' + H + 'px;';
     document.body.appendChild(div);
-    opt.title = { text: title, left: 16, top: 10, textStyle: { color: t.text, fontSize: 15, fontWeight: 600, fontFamily: t.font, width: W - 40, overflow: 'break' } };
     var top = 64;
+    var own = asArray(opt.title).map(function (ti) {
+      if (typeof ti.top === 'number') ti.top += top;
+      return ti;
+    });
+    opt.title = [{ text: title, left: 16, top: 10, textStyle: { color: t.text, fontSize: 15, fontWeight: 600, fontFamily: t.font, width: W - 40, overflow: 'break' } }].concat(own);
     asArray(opt.grid).forEach(function (g) { if (typeof g.top === 'number') g.top += top; else g.top = top + 36; });
     if (items.length > 1) {
       opt.legend = {
@@ -1197,5 +1206,27 @@
       });
     }
     if (!ESOO.canDownload) document.querySelectorAll('[data-act="csv"],[data-act="png"]').forEach(function (b) { b.hidden = true; });
+    // contents rail: mark the figure nearest the top of the viewport
+    if ('IntersectionObserver' in window && document.querySelector('.toc')) {
+      var current = null;
+      var visible = {};
+      var spy = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) { visible[en.target.id] = en.isIntersecting ? en.boundingClientRect.top : undefined; });
+        var best = null, bestTop = Infinity;
+        Object.keys(visible).forEach(function (k) {
+          if (visible[k] !== undefined && visible[k] < bestTop) { bestTop = visible[k]; best = k; }
+        });
+        if (best && best !== current) {
+          if (current) {
+            var old = document.querySelector('.toc a[href="#' + CSS.escape(current) + '"]');
+            if (old) old.classList.remove('is-current');
+          }
+          var link = document.querySelector('.toc a[href="#' + CSS.escape(best) + '"]');
+          if (link) link.classList.add('is-current');
+          current = best;
+        }
+      }, { rootMargin: '-80px 0px -55% 0px' });
+      document.querySelectorAll('.fig[data-fig]').forEach(function (c) { spy.observe(c); });
+    }
   };
 })();
