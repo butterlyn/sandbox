@@ -1053,15 +1053,19 @@ def main():
                                     resolve_ref(d, grids, hidden, name)
                                     if d.get('values') is not None and d.get('cache') is not None and key != 'name':
                                         mism = 0
-                                        for a, b in zip(d['values'], d['cache']):
+                                        vis = d['values']
+                                        if d.get('hiddenIdx') and len(d['cache']) == len(vis) - len(d['hiddenIdx']):
+                                            hid = set(d['hiddenIdx'])  # Excel caches only visible cells
+                                            vis = [v for i, v in enumerate(vis) if i not in hid]
+                                        for a, b in zip(vis, d['cache']):
                                             if isinstance(a, (int, float)) and isinstance(b, (int, float)):
                                                 if abs(a - b) > 1e-6 * max(1, abs(a)):
                                                     mism += 1
                                             elif (a is None) != (b is None) and not (a == '' or b == ''):
                                                 if not (isinstance(a, str) and isinstance(b, str)):
                                                     mism += 1
-                                        if mism or len(d['values']) != len(d['cache']):
-                                            d['cacheMismatch'] = mism or f"len {len(d['values'])} vs {len(d['cache'])}"
+                                        if mism or len(vis) != len(d['cache']):
+                                            d['cacheMismatch'] = mism or f"len {len(vis)} vs {len(d['cache'])}"
                     fig['charts'].append(spec)
                 for pic in anchor.iter('{%s}pic' % NS['xdr']):
                     blip = pic.find('.//a:blip', NS)
