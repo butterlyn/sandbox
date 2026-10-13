@@ -913,13 +913,28 @@
       fallback();
     }
   }
-  function download(name, href) {
+  /**
+   * Save a generated file. Inside the claude.ai viewer this goes through the `downloads`
+   * capability (the viewer confirms the save); as a standalone file it is a normal download.
+   */
+  ESOO.downloads = null; // the viewer's downloads namespace, once resolved
+  function saveFile(name, data, btn) {
+    if (ESOO.downloads) {
+      ESOO.downloads.save({ filename: name, data: data }).then(function () {
+        if (btn) flash(btn, 'Saved');
+      }, function (err) {
+        var code = err && err.code;
+        if (btn) flash(btn, code === 'declined' ? 'Cancelled' : code === 'rate_limited' ? 'Try again shortly' : 'Not available here');
+      });
+      return;
+    }
+    var href = URL.createObjectURL(data instanceof Blob ? data : new Blob([data], { type: 'text/plain;charset=utf-8' }));
     var a = document.createElement('a');
     a.href = href;
     a.download = name;
     document.body.appendChild(a);
     a.click();
-    setTimeout(function () { document.body.removeChild(a); if (href.indexOf('blob:') === 0) URL.revokeObjectURL(href); }, 500);
+    setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(href); }, 500);
   }
   function fileBase(id) {
     return '2026-wem-esoo-' + id.replace(/[^A-Za-z0-9._-]+/g, '_');
@@ -944,7 +959,7 @@
     if (cur) lines.push(cur);
     return lines;
   }
-  function exportPNG(id) {
+  function exportPNG(id, btn) {
     var fig = registry[id], d = getData(id), card = document.getElementById('fig-' + id);
     var W = 1200, PR = 2, PAD = 28;
     var t = makeTheme(W);
@@ -1045,7 +1060,7 @@
       g.fillStyle = t.muted;
       g.font = '12px ' + t.font;
       g.fillText(source, PAD, headH + Hc + 22, W - 2 * PAD);
-      download(fileBase(id) + '.png', cv.toDataURL('image/png'));
+      cv.toBlob(function (blob) { saveFile(fileBase(id) + '.png', blob, btn); }, 'image/png');
     };
     img.src = url;
   }
@@ -1156,10 +1171,10 @@
     } else if (act === 'copy') {
       copyText(toCSV(tableFor(id)), btn);
     } else if (act === 'csv') {
-      var blob = new Blob([toCSV(tableFor(id))], { type: 'text/csv;charset=utf-8' });
-      download(fileBase(id) + '.csv', URL.createObjectURL(blob));
+      // byte-order mark so spreadsheet apps read the UTF-8 (en dashes, degree signs) correctly
+      saveFile(fileBase(id) + '.csv', new Blob(['\ufeff' + toCSV(tableFor(id))], { type: 'text/csv;charset=utf-8' }), btn);
     } else if (act === 'png') {
-      exportPNG(id);
+      exportPNG(id, btn);
     } else if (act === 'zoom') {
       var L = live[id];
       if (L && L.chart) {
@@ -1307,6 +1322,14 @@
       });
     }
     if (!ESOO.canDownload) document.querySelectorAll('[data-act="csv"],[data-act="png"]').forEach(function (b) { b.hidden = true; });
+    // inside the claude.ai viewer, files are offered through its downloads capability
+    if (window.claude && typeof window.claude.use === 'function') {
+      window.claude.use('downloads').then(function (ns) {
+        if (!ns) return;
+        ESOO.downloads = ns;
+        document.querySelectorAll('[data-act="csv"],[data-act="png"]').forEach(function (b) { b.hidden = false; });
+      }, function () { /* no downloads in this view */ });
+    }
     if (BUILD.links === false) document.querySelectorAll('[data-act="link"]').forEach(function (b) { b.hidden = true; });
     // contents rail: mark the figure nearest the top of the viewport
     if ('IntersectionObserver' in window && document.querySelector('.toc')) {
