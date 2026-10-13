@@ -159,6 +159,30 @@ data table in the screenshot if you want to check it.
 Keep each `src/data/<id>.json` under about 400 KB: round to 4–5 significant digits when a series has
 thousands of points, and drop columns the chart doesn't use.
 
+## Lessons from building all 73 charts
+
+- **Display units.** Excel can show a value axis in thousands or millions (`dispUnits` in the summary,
+  e.g. GWh sheets on TWh axes). Divide in the prep script and say so in its docstring.
+- **Axis ranges.** Where Excel scales an axis automatically, set the range and step it drew in the
+  published figure; ECharts' own choice usually differs.
+- **Clustered bars.** With n bars per category and gap width g, `barCategoryGap` is
+  `g / (100·n + g)` of the category, not `g / (100 + g)`. Excel overlap o → `barGap: (-o) + '%'`.
+- **Patterned areas.** Line series with `areaStyle` take their decal from `lineStyle.decal`; also set
+  `itemStyle.decal` so the legend key shows the pattern.
+- **Hollow markers.** Fill each point with `t.surface` (per data item) rather than the series, so legend,
+  tooltip and PNG keys keep the series colour.
+- **Dotted and dashed lines.** The page gives dashed lines butt caps, so `t.dash()` patterns work as is.
+  If you want round dots, set `cap: 'round'` and shorten each dash / lengthen each gap by the line width.
+- **Long axis titles.** ECharts truncates axis names; insert measured line breaks for phones and add
+  ~15px of `grid.top` per extra line.
+- **LTTB sampling.** The axis tooltip only sees sampled points; for long series build the tooltip from the
+  unsampled data.
+- **Multi-panel figures.** Several grids in one option with `axisPointer.link`; don't rely on ECharts
+  `title` for panel titles (use an axis name or `graphic` text).
+- **Tables.** `table()` may return `format(v, colIndex)` for display formatting (CSV keeps raw values) and
+  `decimals` (number or per-column array).
+- Each module runs in its own function scope in the combined page.
+
 ## Report back
 
 End with a short report:
