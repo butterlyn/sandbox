@@ -24,7 +24,7 @@ const width = parseInt(opt('width', '1180'), 10);
 fs.mkdirSync(outDir, { recursive: true });
 
 const browser = await chromium.launch();
-const ctx = await browser.newContext({ viewport: { width, height: 1000 }, colorScheme: theme, reducedMotion: 'reduce' });
+const ctx = await browser.newContext({ viewport: { width, height: 1600 }, colorScheme: theme, reducedMotion: 'reduce' });
 const page = await ctx.newPage();
 const problems = [];
 page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') problems.push(`console.${m.type()}: ${m.text()}`); });
@@ -50,6 +50,8 @@ const renderMs = Date.now() - t0;
 await page.waitForTimeout(500);
 const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
 if (overflow > 1) problems.push(`page scrolls horizontally by ${overflow}px at width ${width}`);
+// the sticky toolbar would be stitched into screenshots of cards taller than the viewport
+await page.addStyleTag({ content: '.toolbar{position:static!important}' });
 const ids = await page.$$eval('.fig[data-fig]', (els) => els.map((e) => e.dataset.fig));
 for (const id of ids) {
   const el = await page.$(`#fig-${id.replace(/\./g, '\\.')}`);

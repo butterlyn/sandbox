@@ -606,6 +606,7 @@
     return {
       silent: o.silent !== false,
       symbol: 'none',
+      precision: o.precision != null ? o.precision : 10,
       lineStyle: { color: o.color || t.text2, type: o.dash || 'dashed', width: o.width || 1.5 },
       label: o.label === false ? { show: false } : defaults(o.label || {}, { color: t.text2, fontSize: 11 }),
       data: o.data || [],
@@ -628,6 +629,12 @@
     };
     ['xAxis', 'yAxis', 'singleAxis', 'radiusAxis', 'angleAxis'].forEach(function (k) {
       asArray(opt[k]).forEach(function (ax) { defaults(ax, axisDefaults); });
+    });
+    // lines that start and end on the plot edges: keep the last category label inside the chart
+    asArray(opt.xAxis).forEach(function (ax) {
+      if (ax.type === 'category' && ax.boundaryGap === false && ax.axisLabel && !ax.axisLabel.rotate && ax.axisLabel.alignMaxLabel === undefined) {
+        ax.axisLabel.alignMaxLabel = 'right';
+      }
     });
     asArray(opt.tooltip).forEach(function (tt) {
       if (tt._esoo) {
@@ -945,6 +952,7 @@
     opt.dataZoom = asArray(opt.dataZoom).filter(function (z) { return z.type === 'inside'; });
     applyBase(opt, t);
     opt.animation = false;
+    asArray(opt.series).forEach(function (sr) { sr.progressive = 0; }); // large series otherwise render over several frames
     var state = (live[id] && live[id].legendState) || {};
     var items = fig.legend === false ? [] : fig.legendItems ? fig.legendItems(d, t) : deriveLegend(opt);
     if (fig.legendOrder) items = sortItems(items, fig.legendOrder);

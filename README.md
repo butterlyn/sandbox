@@ -10,7 +10,7 @@ fall back to system fonts otherwise.
 
 | Figures in the register | 85 |
 |---|---|
-| Native Excel charts, recreated from the chart definitions | 61 sheets (68 chart objects) |
+| Native Excel charts, recreated from the chart definitions | 61 sheets (66 charts; 2 zero-size leftovers skipped) |
 | Charts the register holds as pasted pictures, rebuilt from the data on the same sheet | 12 |
 | Diagrams and maps with no data, shown as the original images | 12 |
 
@@ -60,6 +60,22 @@ node scripts/shot.mjs work/preview/Ch2_F.7.html work/preview/Ch2_F.7.png --fig C
   are used only where a chart reference is broken (`#REF!`).
 - Pictures rebuilt from data compute their statistics (box plots, rankings, categories) from the sheet in
   the figure's prep script; each module's header comment says how.
+
+## Judgement calls on rebuilt figures
+
+Where the data on a sheet and its published picture disagree, the figure's prep script and data table say
+what was done:
+
+- **Figure 21** shows Waste, DSP and Distillate separately (the picture groups them as "Other").
+- **Appendix Figure 25**: the sheet's Cause column is one row out of step with its events; it is
+  re-aligned (this reproduces the published colours). The first event's cause is taken from the picture.
+- **Appendix Figure 26** keeps the sheet's "All three drivers" label for every multi-driver event, so
+  some bubbles the picture colours grey-green are brown. The picture's "1,560 MWh" callout points at an
+  event the sheet records as 3,751 MWh; the label shows the sheet value.
+- **Appendix Figure 28**: the "Essential System Services" band has no column in the register and is
+  derived as gas + ESR Regulation Raise + Contingency Reserve Raise, which matches the picture.
+- **Figures 33, 42 and 43**: box statistics use linear-interpolated quartiles and 1.5 × IQR whiskers, as
+  the sheet notes describe.
 
 ## Sources
 
