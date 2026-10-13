@@ -87,17 +87,17 @@ ESOO.register({
       data: [[ts(co.date), co.demand, hit[2]]],
       renderItem: function (params, api) {
         var p = api.coord([api.value(0), api.value(1)]);
-        var r = diam(api.value(2)) / 2 + 1;
+        var r = diam(api.value(2)) / 2 + 2; // ring just outside the bubble
         var leg = t.pick({ lg: 40, md: 34, sm: 24 });
         var run = t.pick({ lg: 26, md: 22, sm: 14 });
         var fs = t.pick({ lg: 15, md: 14, sm: 12 });
-        var a = [p[0] + (r + 1) * Math.SQRT1_2, p[1] - (r + 1) * Math.SQRT1_2];
+        var a = [p[0] + r * Math.SQRT1_2, p[1] - r * Math.SQRT1_2];
         var b = [a[0] + leg, a[1] - leg];
         var c = [b[0] + run, b[1]];
         return {
           type: 'group',
           children: [
-            { type: 'circle', shape: { cx: p[0], cy: p[1], r: r + 1 }, style: { stroke: t.text2, lineWidth: 1.25, fill: null } },
+            { type: 'circle', shape: { cx: p[0], cy: p[1], r: r }, style: { stroke: t.text2, lineWidth: 1.25, fill: null } },
             { type: 'polyline', shape: { points: [a, b, c] }, style: { stroke: t.text2, lineWidth: 1.25, fill: null } },
             {
               type: 'text',

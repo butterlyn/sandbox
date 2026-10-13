@@ -13,7 +13,7 @@
 (function () {
   var COLORS = { North: '#8fb6dc', 'Metro North': '#b7e19f', South: '#f2cf5b', 'Metro South': '#e98978', East: '#c07dbb' };
   var MEANC = '#404040';  // mean line
-  var OUTC = '#555555';   // outlier circles
+  var OUTC = '#555555';   // outlier circles (open, like matplotlib's fliers)
   var RED = '#9f2c4a';    // reliability standard
   var RS = 0.0002;        // reliability standard, % of annual consumption
   var YMAX = 0.3;
@@ -152,7 +152,8 @@
         var outs = [];
         r.out.forEach(function (list, i) { list.forEach(function (o) { outs.push([i, o[0], o[1], p]); }); });
         series.push({
-          name: OUT, type: 'scatter', xAxisIndex: 2 * p, yAxisIndex: p, z: 5, clip: false, symbolSize: sm ? 4.5 : 5,
+          name: OUT, type: 'scatter', xAxisIndex: 2 * p, yAxisIndex: p, z: 5, clip: false, symbolSize: sm ? 5 : 5.5,
+          // transparent fill keeps every overlapping outline visible and still hit-tests as a disc
           itemStyle: { color: 'rgba(0,0,0,0)', borderColor: t.c(OUTC), borderWidth: 1 }, data: outs,
         });
         var ml = t.markLine({ data: [{ yAxis: RS }], color: t.c(RED), width: 1.25, dash: [6, 4], label: false });
