@@ -1,12 +1,13 @@
 # Review Notes: Diet Principles
 
-These notes explain each change to [diet-principles.md](diet-principles.md). Ten research subagents produced them in October 2026:
+These notes explain each change to [diet-principles.md](diet-principles.md). Twelve research subagents produced them in October 2026:
 - **Six reviewers** each covered a group of the original points.
 - **Four researchers** looked for gaps:
   - official guidelines (Australia, NZ, UK, WHO, US 2020–25 and 2025–30, Canada, Brazil, the Nordic countries)
   - large evidence syntheses
   - research on eating habits
   - a sceptic checking for contested or overstated claims
+- **Two more** later researched ways to sweeten without added sugar.
 
 **The standard:** a point belongs on the list if official dietary guidelines widely endorse it and systematic evidence supports it. Popular ideas with weak or contested evidence are left out (see [Considered but not added](#considered-but-not-added)).
 
@@ -22,7 +23,7 @@ These notes explain each change to [diet-principles.md](diet-principles.md). Ten
 | Improve protein quality | Renamed; red meat moderated, not cut | Choose healthier proteins |
 | Eat more legumes, nuts and seeds | Made concrete | Eat more legumes and nuts |
 | Drink more water | Retitled | Make water your default drink |
-| Reduce added sugar | Reframed as healthy sweetening | Sweeten with fruit |
+| Reduce added sugar | Reframed as healthy sweetening | Sweeten with fruit and spice |
 | Moderate salt intake | Strengthened | Reduce salt |
 | Increase dietary variety | Narrowed to plant foods | Vary your plant foods |
 | Add rather than restrict | Moved into the philosophy | — |
@@ -116,10 +117,10 @@ These notes explain each change to [diet-principles.md](diet-principles.md). Ten
 - **Diet drinks are left out of the wording.** Swapping sugary drinks for them helps a little with weight, but the WHO advises against relying on sweeteners.
 - **Sources:** [Malik & Hu, Nat Rev Endocrinol 2022](https://pmc.ncbi.nlm.nih.gov/articles/PMC8778490) · [Imamura et al., BMJ 2015](https://pmc.ncbi.nlm.nih.gov/articles/PMC4510779/) · [Canada's Food Guide](https://www.canada.ca/en/health-canada/services/food-guide/explore/healthy-eating-recommendations/make-water-drink-choice.html)
 
-### Reduce added sugar → Sweeten with fruit
+### Reduce added sugar → Sweeten with fruit and spice
 - **Why reframed:** the point now leads with something to add, in line with the philosophy.
   - Fruit on unsweetened staples replaces added sugar and brings fibre and nutrients with it.
-  - Cinnamon and vanilla add flavour without sugar.
+  - Spices and vanilla make food taste sweeter without adding sugar (see [Ways to sweeten](#ways-to-sweeten) below).
   - Starting from unsweetened cereal, yoghurt and porridge is the swap that makes this work, and it repeats daily.
 - **Why it still matters:** the WHO limits *free* sugars to under 10% of energy, ideally under 5% (about 25 g a day). Australians average about 8%.
   - Free sugars include honey, syrups and juice, which is why honey and syrup are named. Drinks are covered by the water point.
@@ -134,6 +135,42 @@ These notes explain each change to [diet-principles.md](diet-principles.md). Ten
   For treats, the philosophy's "swaps rather than bans" applies. Reaching for fruit when you want something sweet is the easiest swap.
 - **Australian nutrition panels show total sugars only,** so use the ingredient list to check a product is unsweetened.
 - **Sources:** [WHO, Healthy diet fact sheet](https://www.who.int/news-room/fact-sheets/detail/healthy-diet) · [ABS, Food and nutrients 2023](https://www.abs.gov.au/statistics/health/food-and-nutrition/food-and-nutrients/2023) · [Huang et al., BMJ 2023](https://pmc.ncbi.nlm.nih.gov/articles/PMC10074550)
+
+#### Ways to sweeten
+
+**Good options**
+- **Sweet spices and vanilla** (cinnamon, nutmeg, cardamom, ginger):
+  - Aromas raise perceived sweetness in taste tests. Vanilla made sweetened milk taste sweet enough that researchers estimated its sugar could be cut by 20–50%.
+  - They work best alongside some sweetness, from fruit or milk.
+  - Cinnamon's blood-sugar claims don't hold up. Cassia cinnamon contains coumarin, which is fine in food amounts.
+- **Milk:**
+  - Cooking porridge in milk adds gentle sweetness. Lactose isn't a free sugar.
+  - Lactose-free milk tastes sweeter, with no sugar added.
+  - If you use plant milks, choose unsweetened.
+- **Dried fruit** (raisins, sultanas, dates, apricots):
+  - Whole dried fruit isn't free sugar under the WHO or UK definitions, so it's a genuine swap.
+  - It's concentrated. A heaped tablespoon of raisins (30 g) has about the sugar and kilojoules of a piece of fresh fruit, and the Australian guidelines count it as a fruit serve "only occasionally".
+  - The NHS advises eating it with meals to protect teeth.
+  - About a level tablespoon, 1–2 chopped dates or 2–3 apricot halves per bowl is plenty. Dried cranberries usually have added sugar.
+- **Mashed banana or apple purée:**
+  - Good in porridge, pancakes and baking, where it can replace some of the sugar.
+  - The UK counts puréed fruit as free sugar. Date paste is the weakest option, since dates are about two-thirds sugar.
+- **Roasting, toasting and warmth:** roasting vegetables, caramelising onions and toasting oats or nuts bring out sweetness, and warm food tastes sweeter than cold.
+
+**No better than sugar**
+- **Honey, maple syrup, agave, coconut sugar, rice malt syrup and date syrup:**
+  - All count as free sugars, and none is meaningfully healthier.
+  - The extra antioxidants from the richest of them amount to about one serve of berries.
+  - If you use one, choose it for flavour, measure it and drizzle it on top.
+- **Non-sugar sweeteners** (stevia, monk fruit, sucralose, aspartame):
+  - They're approved by FSANZ and safe within acceptable daily intakes.
+  - Replacing sugar with them gave about 1 kg more weight loss in trials.
+  - The WHO conditionally advises against relying on them. They're fine as a temporary stepping stone.
+  - Many stevia and monk-fruit blends are mostly erythritol, which can upset your gut and carries an unresolved question about blood clotting.
+
+**Turning sweetness down:** cutting sugar makes a food taste sweeter within a few months (about 40% sweeter by month three in one trial). But overall liking for sweetness barely changes (Wise 2016; the industry co-funded Sweet Tooth Trial). Halve the added sweetness, then halve it again every week or two, one food at a time.
+
+- **Sources:** [Swan et al. 2018, UK definition of free sugars](https://pmc.ncbi.nlm.nih.gov/articles/PMC5962881/) · [NHS, 5 A Day portion sizes](https://www.nhs.uk/live-well/eat-well/5-a-day/portion-sizes/) · [Penn State, vanilla and sweetness](https://www.psu.edu/news/research/story/vanilla-makes-milk-beverages-seem-sweeter) · [NCCIH, Cinnamon](https://www.nccih.nih.gov/health/cinnamon) · [Phillips et al. 2009](https://pubmed.ncbi.nlm.nih.gov/19103324/) · [WHO, non-sugar sweeteners guideline (2023)](https://www.who.int/news/item/15-05-2023-who-advises-not-to-use-non-sugar-sweeteners-for-weight-control-in-newly-released-guideline) · [FSANZ, Intense sweeteners](https://www.foodstandards.gov.au/consumer/additives/sweeteners) · [Rogers & Appleton 2021](https://eprints.bournemouth.ac.uk/34855/) · [Witkowski et al., Nat Med 2023](https://www.nature.com/articles/s41591-023-02223-9) · [Wise et al. 2016](https://library.fabresearch.org/viewItem.php?id=10044) · [Sweet Tooth Trial](https://eprints.bournemouth.ac.uk/41626/)
 
 ### Moderate salt intake → Reduce salt
 - **This is one of the strongest levers on the list.**
