@@ -8,14 +8,10 @@
 - **Include dairy or alternatives**: Have milk, yoghurt, cheese or calcium-fortified alternatives most days, favouring unflavoured varieties.
 - **Vary your plant foods**: Rotate different vegetables, fruits, wholegrains, legumes and nuts through the week rather than relying on the same few.
 - **Swap to healthier fats**: Use olive, canola or other plant oils instead of butter, ghee or coconut oil.
-- **Choose healthier proteins**: Favour legumes, fish (about twice a week), eggs and poultry over red meat, and keep processed meats like bacon and ham occasional.
+- **Choose healthier proteins**: Rotate legumes, fish (ideally twice a week), eggs, poultry and red meat, keeping red meat to a few meals a week and processed meats like bacon and ham occasional.
 - **Make water your default drink**: Choose water, unsweetened tea or coffee, or plain milk over soft drinks, cordial, energy drinks and juice.
-- **Reduce added sugar**: Keep sweets, biscuits and cakes occasional, choose unsweetened cereals and yoghurts, and sweeten with fruit rather than sugar, honey or syrup.
+- **Sweeten with fruit**: Add fresh or frozen fruit, cinnamon or vanilla to unsweetened cereal, yoghurt and porridge instead of sugar, honey or syrup.
 - **Reduce salt**: Choose lower-salt versions of everyday foods like bread, stock and sauces, and flavour with herbs, spices, garlic or citrus instead.
-- **Drink less alcohol**: If you drink, less is better; add alcohol-free days and swap some drinks for alcohol-free or lower-alcohol options.
-- **Cook more often**: Prepare more meals at home from basic ingredients, planning a few ahead and cooking extra for leftovers.
-- **Read labels**: Compare similar products per 100 g, picking the one lower in salt, sugar and saturated fat, and look past front-of-pack claims.
-- **Eat mindfully**: Take time over meals, away from screens where you can, and stop when comfortably full.
 
 ## Overall Philosophy
 

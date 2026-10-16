@@ -19,18 +19,14 @@ These notes explain each change to [diet-principles.md](diet-principles.md). Ten
 | Eat more vegetables | Reworded | Eat more vegetables |
 | Eat more fruit | Reworded | Eat more fruit |
 | Choose healthier fats | Reframed as a swap | Swap to healthier fats |
-| Improve protein quality | Renamed and sharpened | Choose healthier proteins |
+| Improve protein quality | Renamed; red meat moderated, not cut | Choose healthier proteins |
 | Eat more legumes, nuts and seeds | Made concrete | Eat more legumes and nuts |
 | Drink more water | Retitled | Make water your default drink |
-| Reduce added sugar | Retargeted | Reduce added sugar |
+| Reduce added sugar | Reframed as healthy sweetening | Sweeten with fruit |
 | Moderate salt intake | Strengthened | Reduce salt |
 | Increase dietary variety | Narrowed to plant foods | Vary your plant foods |
 | Add rather than restrict | Moved into the philosophy | — |
 | — | New | Include dairy or alternatives |
-| — | New | Drink less alcohol |
-| — | New | Cook more often |
-| — | New | Read labels |
-| — | New | Eat mindfully |
 
 ## Existing points
 
@@ -89,15 +85,19 @@ These notes explain each change to [diet-principles.md](diet-principles.md). Ten
 
 ### Improve protein quality → Choose healthier proteins
 - **The old title could mislead.** "Protein quality" is a technical measure of amino-acid content and digestibility, on which animal proteins score highest. So the title could read as "eat more animal protein", the opposite of what was meant.
-- **Processed meat is the biggest lever.**
-  - The WHO's cancer agency (IARC) classes it as a known cause of cancer: each 50 g a day raises bowel-cancer risk by about 18%.
-  - Red meat is classed as probably carcinogenic, and guidelines cap it at about 350–500 g cooked a week.
-- **Which proteins to favour:**
-  - Plant protein is linked with lower mortality; animal protein is neutral (Naghshi 2020).
+- **Processed meat is the biggest lever.** The WHO's cancer agency (IARC) classes it as a known cause of cancer: each 50 g a day raises bowel-cancer risk by about 18%.
+- **Red meat is moderated, not cut.**
+  - IARC classes red meat as probably carcinogenic. If the link is causal, each 100 g a day raises bowel-cancer risk by about 17%.
+  - Links with type 2 diabetes, heart disease and early death are modest, about 10% higher risk per 100 g a day. That evidence is weaker and contested: the Burden of Proof analysis (2022) rated it weak.
+  - Guidelines set a cap, not a ban. The Australian guidelines allow up to 455 g cooked a week, the Heart Foundation under 350 g, and the Nordic guidelines about 350 g. That's a few meals a week.
+  - Red meat is a valuable source of well-absorbed iron, zinc and B12. That matters most for people at risk of iron deficiency.
+- **Rotating protein sources captures the benefit of the swap.**
+  - Replacing a small share of calories from red meat with plant protein was linked with about 12% lower mortality (Song 2016).
+  - Plant protein overall is linked with lower mortality; animal protein is neutral (Naghshi 2020).
   - Fish about twice a week is standard advice (NHS, Heart Foundation, Nordic Nutrition Recommendations 2023).
-  - Eggs are fine for most people.
+  - Eggs and poultry are fine for most people.
 - **Quantity isn't the priority for most adults.** The US 2025–30 target of 1.2–1.6 g/kg a day is an outlier. Older adults are the exception (see [Caveats](#caveats)).
-- **Sources:** [IARC Q&A on red and processed meat](https://www.iarc.who.int/wp-content/uploads/2018/11/Monographs-QA_Vol114.pdf) · [Naghshi et al., BMJ 2020](https://pmc.ncbi.nlm.nih.gov/articles/PMC7374797/) · [Cancer Council Australia](https://www.cancer.org.au/cancer-information/causes-and-prevention/diet-and-exercise/food-and-nutrition/meat-poultry-eggs-and-fish)
+- **Sources:** [IARC Q&A on red and processed meat](https://www.iarc.who.int/wp-content/uploads/2018/11/Monographs-QA_Vol114.pdf) · [Lescinsky et al., Nat Med 2022](https://pmc.ncbi.nlm.nih.gov/articles/PMC9556326) · [Song et al., JAMA Intern Med 2016](https://pubmed.ncbi.nlm.nih.gov/27479196/) · [Naghshi et al., BMJ 2020](https://pmc.ncbi.nlm.nih.gov/articles/PMC7374797/) · [Cancer Council Australia](https://www.cancer.org.au/cancer-information/causes-and-prevention/diet-and-exercise/food-and-nutrition/meat-poultry-eggs-and-fish)
 
 ### Eat more legumes, nuts and seeds → Eat more legumes and nuts
 - **Nuts have the strongest evidence of the three.**
@@ -116,17 +116,23 @@ These notes explain each change to [diet-principles.md](diet-principles.md). Ten
 - **Diet drinks are left out of the wording.** Swapping sugary drinks for them helps a little with weight, but the WHO advises against relying on sweeteners.
 - **Sources:** [Malik & Hu, Nat Rev Endocrinol 2022](https://pmc.ncbi.nlm.nih.gov/articles/PMC8778490) · [Imamura et al., BMJ 2015](https://pmc.ncbi.nlm.nih.gov/articles/PMC4510779/) · [Canada's Food Guide](https://www.canada.ca/en/health-canada/services/food-guide/explore/healthy-eating-recommendations/make-water-drink-choice.html)
 
-### Reduce added sugar (retargeted)
-- **Most free sugar comes from drinks and treats, not staples.** In Australia the top sources are, in order (ABS 2023):
+### Reduce added sugar → Sweeten with fruit
+- **Why reframed:** the point now leads with something to add, in line with the philosophy.
+  - Fruit on unsweetened staples replaces added sugar and brings fibre and nutrients with it.
+  - Cinnamon and vanilla add flavour without sugar.
+  - Starting from unsweetened cereal, yoghurt and porridge is the swap that makes this work, and it repeats daily.
+- **Why it still matters:** the WHO limits *free* sugars to under 10% of energy, ideally under 5% (about 25 g a day). Australians average about 8%.
+  - Free sugars include honey, syrups and juice, which is why honey and syrup are named. Drinks are covered by the water point.
+  - Sugars in whole fruit don't count as free sugars, and worry about them is unfounded.
+- **Where most added sugar comes from:** drinks and treats, not staples. In Australia the top sources are, in order (ABS 2023):
   - soft drinks (19.8%)
   - juice
   - sugar, honey and syrups
   - sweet biscuits
   - cakes and muffins
 
-  The revised point names treats first. It keeps staples too, because swaps there are easy and repeat daily.
-- **The WHO limit covers *free* sugars,** which include honey, syrups and juice. So the point names honey and syrup; drinks are covered by the water point.
-- **Australian nutrition panels show total sugars only,** so use the ingredient list to spot added sugar.
+  For treats, the philosophy's "swaps rather than bans" applies. Reaching for fruit when you want something sweet is the easiest swap.
+- **Australian nutrition panels show total sugars only,** so use the ingredient list to check a product is unsweetened.
 - **Sources:** [WHO, Healthy diet fact sheet](https://www.who.int/news-room/fact-sheets/detail/healthy-diet) · [ABS, Food and nutrients 2023](https://www.abs.gov.au/statistics/health/food-and-nutrition/food-and-nutrients/2023) · [Huang et al., BMJ 2023](https://pmc.ncbi.nlm.nih.gov/articles/PMC10074550)
 
 ### Moderate salt intake → Reduce salt
@@ -150,14 +156,14 @@ These notes explain each change to [diet-principles.md](diet-principles.md). Ten
 - **Sources:** [FAO/WHO, What are healthy diets? (2024)](https://www.who.int/publications/i/item/9789240101876) · [Embling et al., AJCN 2021](https://pmc.ncbi.nlm.nih.gov/articles/PMC7948867/) · [McDonald et al., mSystems 2018](https://pmc.ncbi.nlm.nih.gov/articles/PMC5954204/)
 
 ### Add rather than restrict → moved into the Overall Philosophy
-- **Why it moved:** it describes *how* to change rather than *what* to eat, and the philosophy paragraph already said much the same. Read literally, it also clashed with the sugar, salt and alcohol points.
+- **Why it moved:** it describes *how* to change rather than *what* to eat, and the philosophy paragraph already said much the same. Read literally, it also clashed with the original points on cutting sugar and salt.
 - **The idea holds up when framed as additions *and* swaps:**
   - Added foods help mainly when they displace others. Advice to eat more fruit and vegetables, with nothing else changed, had no effect on weight (Kaiser 2014).
   - Habit research favours "do" goals over "don't" goals: "it is not possible to form a habit for not doing something" (Gardner, Lally & Wardle 2012).
   - Rigid, all-or-nothing dieting is linked with more overeating than a flexible approach.
 - **Sources:** [Kaiser et al., AJCN 2014](https://pmc.ncbi.nlm.nih.gov/articles/PMC4095660/) · [Gardner, Lally & Wardle, BJGP 2012](https://pmc.ncbi.nlm.nih.gov/articles/PMC3505409/) · [Lally et al., EJSP 2010](https://doi.org/10.1002/ejsp.674)
 
-## New points
+## New point
 
 ### Include dairy or alternatives
 - **Why add it:** dairy is the only core food group the original list left out. The Australian, NZ, UK, US (both editions) and Nordic guidelines all include it, and Canada's does in part.
@@ -169,40 +175,9 @@ These notes explain each change to [diet-principles.md](diet-principles.md). Ten
   Unflavoured versions avoid added sugar either way.
 - **Sources:** [Heart Foundation, Dairy and heart health](https://www.heartfoundation.org.au/healthy-living/healthy-eating/dairy-and-heart-health) · [Australian Dietary Guidelines summary (FAO)](https://www.fao.org/nutrition/education/dietary-guidelines/regions/australia/en)
 
-### Drink less alcohol
-- **The most widely endorsed gap:** 8 of the 9 guideline frameworks reviewed include it.
-- **The evidence:**
-  - Alcohol causes at least seven cancers, and the WHO says no level is safe.
-  - The apparent benefit of light drinking largely disappears when studies stop counting former drinkers as non-drinkers (Zhao 2023).
-- **The Australian guideline** (NHMRC 2020): no more than 10 standard drinks a week and no more than 4 on any day. The less you drink, the lower your risk.
-- **Sources:** [WHO, No safe level](https://www.who.int/europe/news/item/04-01-2023-no-level-of-alcohol-consumption-is-safe-for-our-health) · [Australian alcohol guidelines](https://health.gov.au/news/australian-alcohol-guidelines-revised) · [Zhao et al., JAMA Netw Open 2023](https://europepmc.org/article/MED/37000449)
-
-### Cook more often
-- **Why add it:**
-  - It is the main behaviour change in Canada's and Brazil's guidelines, and the US 2025–30 guidelines now recommend "home-prepared meals".
-  - Cooking is how the whole-foods, vegetable, salt and sugar points actually happen.
-- **The evidence is moderate and mostly observational.**
-  - In 11,396 UK adults, those who ate home-cooked meals more than five times a week ate more fruit and vegetables and had better diet scores (Mills 2017).
-  - Planning ahead adds a little on top (Ducrot 2017).
-- **Sources:** [Canada's Food Guide, Cook more often](https://food-guide.canada.ca/en/healthy-eating-recommendations/cook-more-often) · [Brazil's guidelines (FAO)](https://www.fao.org/nutrition/education/dietary-guidelines/regions/brazil/en) · [Mills et al., IJBNPA 2017](https://pmc.ncbi.nlm.nih.gov/articles/PMC5561571/)
-
-### Read labels
-- **Why add it:** labels are how you apply the sugar, salt and wholegrain points to packaged staples. The Australian, UK, US and Canadian guidelines endorse reading them.
-- **Why "look past front-of-pack claims":** health claims make people more likely to choose a product (Kaur 2017).
-- **Australian specifics:** "low salt" means no more than 120 mg of sodium per 100 g. The Health Star Rating is designed for comparing similar products.
-- **Sources:** [Shangguan et al., Am J Prev Med 2019](https://doi.org/10.1016/j.amepre.2018.09.024) · [Kaur et al., IJBNPA 2017](https://pmc.ncbi.nlm.nih.gov/articles/PMC5505045/) · [Canada's Food Guide recommendations](https://www.canada.ca/en/health-canada/services/food-guide/explore/dietary-guidelines/appendix-a-recommendations.html)
-
-### Eat mindfully
-- **Who endorses it:** Canada ("take time to eat"; "notice when you are hungry and when you are full"), Brazil and the US. Australia's Guideline 1 covers how much to eat.
-- **Why add it:** it brings portion size into the list without making it about weight loss.
-- **The evidence is moderate but mostly from short-term lab studies:**
-  - Eating more slowly reduces intake without leaving people hungrier (Robinson 2014).
-  - Distraction such as TV increases intake at that meal and the next (Gough 2026).
-  - Larger portions reliably increase intake (Cochrane, Hollands 2015).
-- **Sources:** [Robinson et al., AJCN 2014](https://doi.org/10.3945/ajcn.113.081745) · [Hollands et al., Cochrane 2015](https://doi.org/10.1002/14651858.CD011045.pub2)
-
 ## Considered but not added
 
+- **Drafted, then removed:** drink less alcohol, cook more often, read labels and eat mindfully. Guidelines widely endorse all four. Their reasoning and sources are in the previous version of this file (commit `f2bc6fb`).
 - **Contested or weak evidence:**
   - avoiding seed oils, or cooking with butter or tallow
   - "eat more protein" or "protein at every meal"
