@@ -10,7 +10,7 @@
 - **Swap to healthier fats**: Use olive, canola or other plant oils instead of butter, ghee or coconut oil.
 - **Choose healthier proteins**: Rotate legumes, fish (ideally twice a week), eggs, poultry and red meat, keeping red meat to a few meals a week and processed meats like bacon and ham occasional.
 - **Make water your default drink**: Choose water, unsweetened tea or coffee, or plain milk over soft drinks, cordial, energy drinks and juice.
-- **Sweeten with fruit and spice**: Add fresh, frozen or a little dried fruit, cinnamon or vanilla to unsweetened cereal, yoghurt and porridge instead of sugar, honey or syrup.
+- **Sweeten with fruit and spice**: Add fresh, frozen or a little dried fruit (e.g. raisins, sultanas, dates or apricots), cinnamon or vanilla to unsweetened cereal, yoghurt and porridge instead of sugar, honey or syrup.
 - **Reduce salt**: Choose lower-salt versions of everyday foods like bread, stock and sauces, and flavour with herbs, spices, garlic or citrus instead.
 
 ## Overall Philosophy
