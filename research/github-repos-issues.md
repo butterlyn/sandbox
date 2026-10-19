@@ -12,6 +12,15 @@
 
 ## Summary
 - Screen: PASS
+- Deep-dive (2026-10-19), as a layer component:
+  - **A5: PARTIAL.** Committed and pushed state only; GitHub has no documented auto-sync of a working tree.
+  - **A7: PASS (workaround).** Git branches hand files over between PC sessions, separate sandboxes and vendor clouds.
+  - **A6b: PASS (workaround), composed from documented parts and not tested end to end.** A Stop or SessionEnd hook in each harness pushes the native transcript to a private repo before teardown.
+  - A1–A4, A6a and A8: N/A (layer).
+  - **FAVOUR:** F1–F10 = 4/20 (F4 2, F7 1, F8 1); F11a–e = 0/10.
+- Update (2026-10-19, deep-dive): brief 7.12 now counts git as a given, which settles the first open question below.
+  - Its stated reason ("Claude Code on Windows requires Git for Windows") does not match Anthropic's setup page. That page says Git for Windows is "optional" on native Windows, "recommended … so Claude Code can use the Bash tool", and "WSL setups do not need Git for Windows" (https://code.claude.com/docs/en/setup, undated, retrieved 2026-10-19).
+  - git stays a given by the orchestrator's decision; only the stated reason is off.
 - **Maintenance (N2, N3).** GitHub, Inc. is an organisation with "a workforce of 3,000 + talented Hubbers". Its leadership page is headed by Microsoft's Executive Vice President for CoreAI.
   - GitHub Mobile ships weekly; the latest is 1.281.0 (2026-10-15).
   - The changelog has 245 entries in the last 90 days, including PR, issue and Projects features.

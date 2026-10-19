@@ -9,6 +9,17 @@
 
 ## Summary
 - Screen: PASS
+- Deep-dive: this is a networking layer, so A1–A4, A6 and A8 are N/A (layer).
+  - **A5:** PASS for agent workspaces on the Windows (NTFS) filesystem. A Windows SMB share reached from the iOS Files app over the tailnet is documented end to end by Tailscale (last validated 2026-05-18).
+  - **WSL2 (ext4) workspaces:** this layer cannot provide A5. A WSL maintainer calls sharing `\\wsl.localhost` paths over the network "unfortunately by design" not possible and points to Samba, which is unscreened glue. Taildrive is alpha and its Windows-host sharing has an open bug (#13912).
+  - **FAVOUR:** F6 + F7 + F8 = 6/6 on a Windows-native topology and 2/6 on a WSL2 topology. Everything else is N/A. So F1–F10 = 6/20 (Windows-native) or 2/20 (WSL2), and F11 = 0/10.
+  - **Credentials:** none touched.
+  - **The fact that most shapes stacks:** Tailscale gives the phone live access to workspace folders only if they sit on `C:\`. That favours the Windows-native topology already recommended for claude-desktop and chatgpt-desktop-codex. WSL2-centred stacks need their platform's own phone file browser for A5 (e.g. T3 Code, Orca).
+- Correction (2026-10-19, deepdive-tailwind): the screen's "SMB, givens" row marked iOS Files → Windows share over the tailnet as UNKNOWN for want of an end-to-end source. Tailscale's own doc "Access NAS, media servers, or file shares remotely" (last validated 2026-05-18) documents both halves:
+  - Windows server: "right-click the folder, open **Properties > Sharing**, and configure sharing" ([L26-L29](https://tailscale.com/docs/use-cases/personal-or-at-home-use/access-nas-media-file-servers.md)).
+  - iOS/iPadOS client: "open the **Files** app, tap **…**, and select **Connect to Server**. Enter `smb://hostname` or `smb://100.x.y.z` and sign in. The share appears under **Network**" (L99-L101).
+  - The cellular failure in #18967 remains a caveat, and its reporters fixed it by using the hostname or "Override local DNS".
+- Correction (2026-10-19, deepdive-tailwind): sharing from a Windows host via Taildrive does not work reliably. Open issue #13912 (opened 2024-10-25, last comment 2026-04-17) reports that Windows-hosted shares appear empty or return 404 while Linux-hosted shares work. No maintainer has replied. Treat Taildrive-from-Windows as unavailable, not merely alpha.
 - Tailscale passes N3, N1, N2 and C1. A1, A3 and A4 are `N/A (layer)`. It is a networking component: it starts no agent sessions and never handles Claude or ChatGPT credentials, so other components must clear those gates.
 - The project is healthy. It has 37.7k stars, shipped v1.104.1 on 2026-10-07 (App Store 2026-10-08), and has 462 non-bot commits to `main` in the last 90 days. In the N2 window, Brad Fitzpatrick wrote 31.7% of non-bot commits, Simon Law merged other people's PRs, and Nick O'Neill tagged the releases. The vendor is Tailscale Inc.
 - C1:
@@ -43,6 +54,72 @@ These are not gates. The indicative verdicts are this screen's reading, to be re
 | SSH from iOS | **Server:** the Tailscale SSH server "is only available on: Linux; macOS open source `tailscale` + `tailscaled` CLI devices", so not on Windows. On this PC it needs `tailscaled` inside WSL2, against Tailscale's WSL2 advice. MTU bugs there are still open: #4833, and #21659 (2026-10-05), whose fix PR #21767 is open. **Clients:** "You can connect from any device running Tailscale". The iOS app's App Store listing describes no SSH client, so a third-party iOS SSH app is needed and must be screened as glue (7.4/7.12). The browser-based Tailscale SSH Console is "currently in beta" and admin-only; iOS Safari support is undocumented. **Alternative:** plain `sshd` (Windows OpenSSH, or `sshd` in WSL2 with mirrored mode or portproxy) over the tailnet works with any client. An SSH connection "may pause briefly but will stay connected" across Wi-Fi ↔ cellular switches. | https://tailscale.com/docs/features/tailscale-ssh · https://tailscale.com/docs/features/tailscale-ssh/tailscale-ssh-console · https://tailscale.com/docs/reference/ssh-over-tailscale · https://github.com/tailscale/tailscale/issues/21659 · https://apps.apple.com/us/app/tailscale/id1470499037 · https://learn.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse | last validated 2026-01-05 · last validated 2026-01-05 · last validated 2026-01-12 · opened 2026-10-05 · 2026-10-08 · updated 2026-09-08 |
 | Cross-cutting | **One VPN:** "iOS and Android enforce a limit of running only one VPN at a time", so no other VPN-based component can run on the phone alongside Tailscale. **Funnel:** public-internet exposure ("currently in beta", ports 443/8443/10000 only). Avoid it for agent dev servers; Serve keeps them tailnet-only. **Cost:** the free Personal plan covers "Up to 6 users" and "Unlimited user devices". | https://tailscale.com/docs/reference/faq/other-vpns · https://tailscale.com/docs/features/tailscale-funnel · https://tailscale.com/pricing | last validated 2026-01-12 · last validated 2026-01-20 · undated, retrieved 2026-10-19 |
 
+## Deep-dive
+Checked 2026-10-19 by deepdive-tailwind (fork). Topologies:
+- **T-W:** Windows-native. Agent workspaces on NTFS, e.g. `C:\src`; the claude-desktop and chatgpt-desktop-codex deep-dives recommend this.
+- **T-L:** WSL2-centred. Workspaces in the WSL2 ext4 filesystem; T3 Code, Archon, Agor and Gas City as deployed in WSL2.
+
+### ALWAYS gates (what this layer contributes)
+| ID | Verdict | Evidence (short quote or exact paraphrase) | Source URL | Source date |
+|----|---------|---------------------------------------------|------------|-------------|
+| A5 (T-W, workspaces on NTFS) | PASS | **M1 → M2**, a chain of four documented links:<br>1. **Windows share:** "right-click the folder, open Properties > Sharing, and configure sharing". Microsoft: "under Private networks, turn on Network discovery and File and printer sharing".<br>2. **Tailnet profile:** the Windows client sets the Tailscale adapter to the Private network category (source).<br>3. **iPhone/iPad:** "open the Files app, tap …, and select Connect to Server. Enter `smb://hostname` or `smb://100.x.y.z` and sign in. The share appears under Network in the sidebar".<br>4. **Apple:** Files supports "SMB support to connect to a server at work or a home PC", and Connect to Server takes "a local hostname or a network address".<br>The phone browses the live folder tree and reads any file, including new and uncommitted ones. There is no sync lag, because it reads the PC's disk over SMB.<br>**M2 → M1:** work started from the phone runs on the PC, so its files are already local to M2.<br>**Caveats:** not tested hands-on. Cellular TCP/SMB hangs from iOS in #18967 (open; workarounds: use the MagicDNS hostname, or "Override local DNS"). Windows Firewall scope for SMB-In on the Tailscale adapter is not documented (see Open questions). | https://tailscale.com/docs/use-cases/personal-or-at-home-use/access-nas-media-file-servers · https://support.microsoft.com/en-us/windows/experience/connectivity-networking/file-sharing-over-a-network-in-windows · https://github.com/tailscale/tailscale/blob/9a522a9786c97eb7910c01ccb7bd66557b04c910/wgengine/router/osrouter/ifconfig_windows.go#L163-L169 · https://support.apple.com/guide/iphone/transfer-files-iphone-a-storage-device-iphe9aff429a/ios · https://support.apple.com/en-us/118392 · https://github.com/tailscale/tailscale/issues/18967 | last validated 2026-05-18 · undated (© 2026), retrieved 2026-10-19 · 2026-10-07 (v1.104.1) · undated (iOS 27 guide), retrieved 2026-10-19 · 2024-02-26 · opened 2026-03-11, last comment 2026-05-14 |
+| A5 (T-L, workspaces in WSL2 ext4) | FAIL (this layer) | **SMB:** Windows file sharing cannot publish WSL2 distro paths. A WSL maintainer (OneBlue) answered a request to share WSL content on the network with "This is unfortunately by design" (`\\wsl.localhost` is per-user), and suggested "running a samba server". Samba inside WSL2 would be glue needing its own screen (7.12).<br>**Taildrive:** "currently in alpha"; enabled with policy-file `nodeAttrs` (opt-in, so PARTIAL at best under 7.16a). Windows-hosted shares are broken in open #13912. The Taildrive docs do not mention WSL or UNC paths.<br>So on T-L, A5 must come from another component, e.g. the phone file browsers in T3 Code or Orca. | https://github.com/microsoft/WSL/issues/11355 · https://tailscale.com/docs/features/taildrive · https://github.com/tailscale/tailscale/issues/13912 | closed 2024-04-11 (by design) · last validated 2026-01-05 · opened 2024-10-25, last comment 2026-04-17 |
+| A7 | N/A (layer) | Single-host stack: every harness and sandbox runs on the one PC, so handover never crosses machines. If a delegated session ever ran on another tailnet machine, Tailscale would only carry git or SSH traffic, so the handover mechanism belongs to another component. | — | — |
+| A1, A2, A3, A4, A6, A8 | N/A (layer) | It starts no sessions, renders no transcripts, runs no harness and stores no transcripts. It only carries traffic that other components use (screen rows A1/A3/A4). | https://github.com/tailscale/tailscale/blob/9a522a9786c97eb7910c01ccb7bd66557b04c910/README.md#L9-L14 | 2026-10-07 |
+
+### FAVOUR scores
+| ID | Verdict | Points | Evidence | Source URL | Source date |
+|----|---------|--------|----------|------------|-------------|
+| F6 (T-W) | PASS | 2 | Serve (GA): `tailscale serve --bg <port>` publishes `http://127.0.0.1:<port>` at `https://<machine>.<tailnet>.ts.net`, "Available within your tailnet", persistent across reboots. A Windows-native dev server is reachable from iPhone Safari. Alternative: the direct tailnet IP with a Windows Firewall allow rule. | https://tailscale.com/docs/features/tailscale-serve · https://tailscale.com/docs/reference/tailscale-cli/serve | last validated 2026-01-20 · last validated 2026-01-26 |
+| F6 (T-L) | PARTIAL | 1 | **Serve:** NAT `localhostForwarding` exposes a WSL2 server at Windows `127.0.0.1`, so Serve can publish it. But open #9228 (needs-triage; no maintainer reply; last comment 2025-08-29) reports a 502 from Serve/Funnel to WSL2, attributed to MTU. The workarounds are lowering the requester's MTU (impossible on iOS) or raising WSL2 `eth0` MTU.<br>**Mirrored mode:** mirrored networking (Windows 11 22H2+) plus the direct tailnet IP was reported working in #14790. | https://github.com/tailscale/tailscale/issues/9228 · https://learn.microsoft.com/en-us/windows/wsl/networking · https://github.com/tailscale/tailscale/issues/14790 | opened 2023-09-04, last comment 2025-08-29 · updated 2026-06-02 · opened 2025-01-26 |
+| F7 (T-W) | PASS | 2 | **M2 file on M1:** a file on the SMB share opens in place from the iOS Files app (A5 row chain), and the Files app hands it to any viewer or editor app.<br>**M1 file on M2:** save it into the share from iOS Files, then open it on the PC. | (A5 T-W sources) | (as A5 T-W) |
+| F7 (T-L) | FAIL | 0 | No path from this layer (A5 T-L row). | (A5 T-L sources) | — |
+| F8 (T-W) | PASS | 2 | Copy or move between iOS Files and the mounted SMB share in both directions (Apple: select the "server volume or shared folder" in the Browse sidebar; Tailscale: the share appears under Network). It lands straight in the agent workspace on `C:\`. | https://support.apple.com/guide/iphone/transfer-files-iphone-a-storage-device-iphe9aff429a/ios · https://tailscale.com/docs/use-cases/personal-or-at-home-use/access-nas-media-file-servers | undated, retrieved 2026-10-19 · last validated 2026-05-18 |
+| F8 (T-L) | PARTIAL | 1 | Only Taildrop, which is "currently in alpha" and opt-in. From iOS it lands in Windows `Downloads`, which WSL2 reaches at `/mnt/c/...`. The agent or user must then move the file into the ext4 workspace. | https://tailscale.com/docs/features/taildrop | last validated 2026-01-05 |
+| F1–F5, F9, F10 | N/A (layer) | 0 | Networking does not run, display or containerise agents. The Tailscale iOS app is a VPN client, not an agent UI, so it earns no F3/F4 credit. | — | — |
+| F11a–F11e | N/A (layer) | 0 | No sessions. | — | — |
+
+**Subtotals:**
+- F1–F10 = 6/20 (T-W) or 2/20 (T-L).
+- F11 = 0/10.
+
+### Harness integration
+- **Agent invocation:** none. Tailscale never invokes `claude` or `codex`.
+- **Credentials:** it never reads, copies or proxies Claude or ChatGPT credentials.
+  - Tunnel traffic is end-to-end WireGuard: "Because Tailscale private keys never leave the local device that generated them, it's impossible for a DERP server to decrypt your traffic."
+  - Serve terminates TLS on the user's own PC with a machine certificate. Enabling it publishes machine names to Certificate Transparency logs.
+  - So no 7.16b policy-risk note is needed.
+  - Sources: https://tailscale.com/docs/reference/derp-servers (last validated 2026-01-21) and https://tailscale.com/docs/how-to/set-up-https-certificates (last validated 2025-12-10).
+
+### Stack fit (recipe for the user's PC)
+1. **Install** the Windows client and sign in. Turn on **Run unattended** (`tailscale set --unattended=true`) so the tailnet stays up across sign-outs and reboots on the always-on PC. Do **not** also run `tailscaled` inside WSL2 (Tailscale advises Windows-host only). Install the iOS/iPadOS app on the phone and tablet.
+2. **WSL2 networking.**
+   - NAT mode (default) with `localhostForwarding=true` makes WSL2 servers bound to `localhost` or `0.0.0.0` reachable at Windows `127.0.0.1`. That is what Serve needs; mind the #9228 MTU caveat.
+   - Mirrored mode (Windows 11 22H2+) lets the phone hit a WSL2 port on the Windows tailnet IP. Hyper-V firewall rules may be needed.
+3. **Expose agent UIs to the tailnet only, never via Funnel** (Funnel is public-internet, beta). Per component, from each candidate's screen file:
+
+   | Component | How to expose it |
+   |---|---|
+   | T3 Code | `t3 serve --tailscale-serve` (built in) or the tailnet IP. Avoid T3 Connect (Cloudflare). |
+   | Orca | Direct WebSocket port 6768 over the tailnet, instead of the vendor's E2E relay. |
+   | Archon | `archon serve` binds `0.0.0.0:3090` with **no auth on solo installs**. Bind loopback and use `tailscale serve --bg 3090`, or restrict 3090 in Windows Firewall to `100.64.0.0/10`. |
+   | Agor | Daemon on `localhost:3030`: `tailscale serve --bg 3030`. |
+   | Maestro | Binds `0.0.0.0` with a URL token. The QR shows the LAN IP, so type the MagicDNS name instead. |
+   | agentsview | Keep `127.0.0.1:8080` behind Serve with `--public-url` set to the ts.net URL, or enable `require_auth` for any non-loopback bind. |
+   | Gas City dashboard | `127.0.0.1:8372` behind Serve; it stays read-only unless `allow_mutations` is set. |
+   | Claude Remote Control, ChatGPT remote connections | Use their vendors' relays and need no Tailscale port. |
+
+4. **Files (A5/F7/F8 on T-W).** Share the workspace root on `C:\` with Properties > Sharing on the Private-profile Tailscale adapter. On iPhone/iPad, use Files → Connect to Server → `smb://<pc-magicdns-name>`. Use the hostname rather than the IP to sidestep the #18967 cellular hang.
+5. **ACLs.**
+   - A personal tailnet's default policy lets the owner's devices reach each other.
+   - Tighten it so only the phone and tablet can reach the PC's 445 (SMB) and the UI ports above.
+   - Serve's HTTPS needs MagicDNS and HTTPS certificates enabled.
+6. **iOS one-VPN limit.** Tailscale holds the phone's only VPN slot. Vendor relays (Claude, ChatGPT, Orca, T3) are unaffected.
+7. **Conflicts.**
+   - T-L stacks keep code on ext4 for speed (Microsoft advice), and lose SMB visibility.
+   - Moving code to `/mnt/c` restores SMB but slows Linux tooling.
+   - So pair Tailscale with T-W stacks for A5, or rely on a T-L platform's own phone file browser.
+
 ## Open questions
 - **Serve on Windows to a WSL2 dev server.** Does it work end to end on v1.104.1 from an iPhone, or does the #9228 502/MTU failure occur? iOS cannot lower its MTU.
   - Why it matters: this is the main F6 path. A live test or a maintainer statement would settle it.
@@ -56,3 +133,9 @@ These are not gates. The indicative verdicts are this screen's reading, to be re
   - Why it matters: it would give a non-alpha A5/F7/F8 path built only from givens (Windows SMB and the iOS Files app). It is UNKNOWN until shown end to end.
 - **Tailscale SSH Console on iOS Safari.** Does it work there?
   - Why it matters: without it, SSH from iPhone needs a separately screened iOS SSH app (A1 via a generic terminal, 7.4).
+- **Windows Firewall scope (deep-dive).** Does the built-in "File and Printer Sharing (SMB-In)" rule on the Private profile accept peers from `100.64.0.0/10` on the Tailscale adapter by default, or is a scoped allow rule needed?
+  - Why it matters: if a manual rule is needed, A5/F7/F8 on T-W become `PASS (workaround)` rather than plain PASS.
+- **SMB sign-in with a Microsoft-account Windows login (deep-dive).** Which credentials does iOS Files' "Registered User" need?
+  - Why it matters: this is setup friction only. If no credential works without a local account, A5 on T-W needs a documented local-account step.
+- **SMB Multichannel over Tailscale on Windows (deep-dive).** It is reported to degrade throughput (#17707, not verified here).
+  - Why it matters: performance only, no verdict change.
