@@ -468,6 +468,14 @@ Two screens graded the same facts differently, so these rules replace the ambigu
   - Every other gate is judged as usual.
 - **New candidates:** "Bernstein", "cmux", and AWS's "CLI Agent Orchestrator" (the user confirmed "awe's" meant AWS). The user notes cmux may be a candidate in its own right or a component of a combined stack. Identities are resolved in `research/resolve.md` section D and listed in 7.19.
 
+### 7.19 Candidates added by the user (identities from resolve.md section D)
+
+| slug | canonical product and scope | where to start |
+|---|---|---|
+| bernstein | Bernstein: a CLI-agent orchestrator with a terminal dashboard and a browser dashboard. It runs `claude -p` (stream-json) and the `codex` CLI. Lead: the README says "Status: beta." and "Solo-maintained". | github.com/sipyourdrink-ltd/bernstein |
+| cmux | cmux by Manaflow: a Ghostty-based terminal with scriptable panes, a socket API and CLI, and an iOS companion (TestFlight). Screen it as a whole product and say which layer it could fill in a combined stack (PC terminal, light orchestrator, iPhone client). Lead: macOS-only; the iOS app pairs through the Mac. | github.com/manaflow-ai/cmux, cmux.com |
+| cli-agent-orchestrator | AWS Labs CLI Agent Orchestrator (CAO): a local server that runs each agent CLI in its own tmux session, with supervisor→worker hand-off via MCP and a web UI on localhost:9889. Leads: the install docs say Claude Code and Codex need API keys, which conflicts with source showing the unmodified interactive CLIs; Linux/macOS install only. | github.com/awslabs/cli-agent-orchestrator |
+
 ### 7.15 Candidates added from discovery
 Proposals and evidence are in `research/discovery.md`.
 

@@ -394,12 +394,13 @@ Each item gives: criterion · ambiguity · proposed reading (an operational test
 
 ## D. Additions (2026-10-19)
 
-The user added two candidates after the first shortlist. Same rules as section A: identity and scope only; facts that bear on gates are leads, not verdicts. Sources retrieved 2026-10-19 via WebFetch, plus a read-only anonymous clone for Bernstein.
+The user added three candidates after the first shortlist: "Bernstein", "cmux" and "awe's CLI Agent Orchestrator". Same rules as section A: identity and scope only; facts that bear on gates are leads, not verdicts. Sources retrieved 2026-10-19 via WebFetch, plus read-only anonymous clones for Bernstein and CLI Agent Orchestrator.
 
 | slug | user's name | canonical name | canonical URL(s) | GitHub repo (licence) | layer(s) | one-line description | conf. | alternatives considered → why rejected |
 |---|---|---|---|---|---|---|---|---|
 | bernstein | Bernstein | Bernstein ("the open-source governance layer for AI agents") | https://github.com/sipyourdrink-ltd/bernstein (github.com/chernistry/bernstein renders as this repo) · docs https://bernstein.readthedocs.io · PyPI `bernstein` (3.x) | sipyourdrink-ltd/bernstein (Apache-2.0; ~1.3k★, 184 forks displayed) | orchestrator, client/UI | Deterministic Python scheduler (no LLM in the coordination loop) that runs CLI coding agents in parallel, each in its own git worktree, behind lint/type/test gates. Records lineage and a replay journal, with an opt-in HMAC-chained audit log. Supports 50+ agents including Claude Code and Codex. Dashboards: `bernstein live` (TUI) and `bernstein gui serve` (browser). | high | No other agent product called Bernstein found (search, 2026-10-19). The chernistry and sipyourdrink-ltd owners are the same repo, not two products. |
 | cmux | cmux | cmux by Manaflow: "Open source Ghostty-based macOS terminal with vertical tabs and notifications for AI coding agents" | https://cmux.com (www.cmux.dev 301-redirects here) · https://github.com/manaflow-ai/cmux · https://cmux.com/agents/claude-code · https://cmux.com/agents/codex | manaflow-ai/cmux (GPL-3.0-or-later for the app; server parts `web/`, Cloudflare workers and relay services under BUSL-1.1; ~28.3k★, 2.5k forks displayed) | PC terminal/multiplexer (client/UI on the PC); orchestrator-lite (scriptable panes); client/UI (iOS companion, beta); runtime (cloud VMs, early access) | Native Swift/AppKit terminal built on libghostty. Workspaces and splits per task; notification rings driven by OSC 9/99/777 or agent hooks. A CLI and Unix-socket API let agents create workspaces, split panes, send keystrokes, read screen contents and drive a built-in browser. Claude Code teammates and subagents appear as native splits. `cmux ssh` and remote-tmux attach (beta). iOS companion "cmux BETA" on TestFlight pairs through the Mac's Mobile Connect window to attach to terminals. | high | **cmux.dev**: Manaflow's earlier "universal AI coding agent manager" (VS Code workspaces in cloud or local Docker); the domain now 301-redirects to cmux.com, so it is the same vendor's superseded product. **coder/cmux**: Coder's "Coding Agent Multiplexer" was renamed Mux, then Xum (the page now shows coder/xum, AGPL-3.0, ~2.1k★), and it runs "a custom agent loop", not Claude Code or Codex. No longer called cmux. **craigsc/cmux**: "tmux for Claude Code", a bash worktree manager, ~605★, Claude-only. Far less known. None is as plausible as manaflow-ai/cmux, so there is one row only. |
+| cli-agent-orchestrator | awe's CLI Agent Orchestrator | CLI Agent Orchestrator (CAO, "kay-oh") by AWS Labs | https://github.com/awslabs/cli-agent-orchestrator · docs https://awslabs.github.io/cli-agent-orchestrator/ · PyPI `cli-agent-orchestrator` (2.x) | awslabs/cli-agent-orchestrator (Apache-2.0; ~1.5k★, 297 forks displayed) | orchestrator, client/UI | "Multi-agent orchestration for AI coding CLIs — Claude Code, Kiro, Codex, and more, coordinated in isolated tmux sessions". A local `cao-server` launches each provider CLI as a full interactive process in its own tmux session. A supervisor agent delegates to worker agents over MCP: parallel, sequential or swarm, and across providers (e.g. a Kiro supervisor with a Claude Code worker). Also a web UI at `localhost:9889`, an HTTP API with PTY WebSocket streaming, scheduled flows and headless runs; humans can attach to any agent's tmux session. | high | "awe's" read as "AWS's": the owner is `awslabs` and the repo title is exactly "CLI Agent Orchestrator". ComposioHQ's agent orchestrator, named next to CAO in a third-party landscape article (not verified here), has a different vendor and name. Forks or mirrors of the repo are copies. No other product with this name was found, so there is one row only. |
 
 ### D.1 cmux: where it could fit in a combined stack
 
@@ -433,9 +434,27 @@ The user added two candidates after the first shortlist. Same rules as section A
   - Windows and WSL support are not stated (WSL2 via Linux install is the likely path; K1).
   - Mobile: none mentioned; only the browser dashboard, reachable over a network.
 
-### D.3 Repos for these additions
+### D.3 CLI Agent Orchestrator: identity confirmed
+
+- **Identity.** "awe's" → "AWS's". The primary source is the repo page https://github.com/awslabs/cli-agent-orchestrator: owner `awslabs`, title "CLI Agent Orchestrator", Apache-2.0, about 528 commits. HEAD is `e1d53bd2bdb8debccbfb0c977e5e1ca4af69eb3f` (2026-10-19), so the project is active (lead for N3). Docs: https://awslabs.github.io/cli-agent-orchestrator/docs/intro. The README carries no beta or experimental label. Agent plugins ship disabled behind `CAO_AGENT_PLUGINS_ENABLED`.
+- **Harness lead (for screening, not a verdict).** It launches the unmodified interactive CLIs inside tmux:
+  - Claude: `claude --dangerously-skip-permissions`, or `claude --permission-mode <mode>`, or plain `claude` for root. https://github.com/awslabs/cli-agent-orchestrator/blob/e1d53bd2bdb8debccbfb0c977e5e1ca4af69eb3f/src/cli_agent_orchestrator/providers/claude_code.py#L409-L433
+  - Codex: `codex --profile <p>` or `codex --yolo`, plus `--no-alt-screen --disable shell_snapshot`. https://github.com/awslabs/cli-agent-orchestrator/blob/e1d53bd2bdb8debccbfb0c977e5e1ca4af69eb3f/src/cli_agent_orchestrator/providers/codex.py#L1387-L1420
+  - The Codex provider recognises Codex's own first-run menu ("Sign in with ChatGPT … or connect an API key") and leaves it to a human. The CLI's own login is therefore what gets used: https://github.com/awslabs/cli-agent-orchestrator/blob/e1d53bd2bdb8debccbfb0c977e5e1ca4af69eb3f/src/cli_agent_orchestrator/providers/codex.py#L156-L170
+- **Docs conflict lead (A3).** The installation page (undated, retrieved 2026-10-19) says Claude Code "requires Anthropic API key" and Codex "requires OpenAI API key". It does not mention subscription logins, yet the code runs the stock CLIs, which authenticate with whatever login they hold. Screening must settle A3 from the code at HEAD and current docs, and record the conflict.
+- **Platform lead.**
+  - Requires Python 3.10+, tmux 3.3+ and uv.
+  - Install commands cover macOS (Homebrew), Ubuntu/Debian and Amazon Linux/RHEL.
+  - Windows and WSL are not mentioned. Because of tmux, WSL2 is the only route on the user's PC (K1).
+- **Stack fit.**
+  - **Orchestrator:** supervisor/worker over MCP, cross-provider, which bears on A8 and F11a.
+  - **Client/UI:** the web UI and tmux attach give native-TUI access, which bears on F5. The iPhone could reach the web UI over Tailscale only if it is exposed beyond localhost; no iOS app is mentioned (A1 lead).
+  - **Natural pairings:** Tailscale, an iOS terminal for tmux attach, agentsview for transcript audit, and the claude/codex CLIs in WSL2.
+
+### D.4 Repos for these additions
 
 ```
 sipyourdrink-ltd/bernstein
 manaflow-ai/cmux
+awslabs/cli-agent-orchestrator
 ```
