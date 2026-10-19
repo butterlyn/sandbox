@@ -210,7 +210,205 @@ Rules for evidence cells:
 
 ## 7. Interpretations (binding; decided by the orchestrator after Stage 1)
 
-_Pending Stage 1._
+The user asked for no questions during the run, so the orchestrator decided each ambiguity below. Where a choice existed, it took the reading that does not relax a gate. Proposals and evidence: `research/resolve.md` section B (orientation only; this section is what binds).
+
+### 7.0 Access (overrides rule 5 in section 8 where they differ)
+- `api.github.com` is blocked for candidate repos ("GitHub access to this repository is not enabled for this session"). Do not use it, and do not call `add_repo`.
+- Use WebFetch on `github.com` pages for stars, archived flag, releases, issues and PRs.
+- Anonymous `git clone`/`fetch` of public repos works through the proxy. Use `GIT_LFS_SKIP_SMUDGE=1` and a generous timeout (up to 10 minutes).
+  - Source: `git clone --depth 1 <url> <dir>`.
+  - History for N2/N3: `git clone --filter=blob:none --no-checkout --shallow-since=2026-04-22 <url> <dir>`, then `git log` / `git shortlog -sne`.
+  - On HTTP 429, wait 5 s and retry once.
+
+### 7.1 Candidate identities
+Screen the product in the "canonical" column. Display names follow the user's list.
+
+| slug | canonical product | where to start |
+|---|---|---|
+| t3-code | T3 Code, v0.1.0+ ("T3 Code Orchestrator V2"): server, desktop, web and iOS app | github.com/pingdotgg/t3code |
+| superset | Superset (superset.sh): agent IDE, CLI, SDK, MCP, iOS app | github.com/superset-sh/superset |
+| orca | Orca by Stably AI: desktop agent fleet manager, iOS companion | github.com/stablyai/orca |
+| paseo | Paseo: daemon, desktop, iOS and web clients, relay | github.com/getpaseo/paseo (+ getpaseo/paseo-relay) |
+| maestro | Maestro: agent orchestration command center, mobile web remote | github.com/RunMaestro/Maestro |
+| scion | Scion (GoogleCloudPlatform): containerised multi-agent orchestration | github.com/GoogleCloudPlatform/scion |
+| archon | Archon (coleam00): workflow engine around Claude Code and Codex | github.com/coleam00/Archon |
+| docker-sandboxes | Docker Sandboxes, the `sbx` CLI (the older `docker sandbox` integration in Docker Desktop is history only) | docs.docker.com/ai/sandboxes, github.com/docker/sbx-releases |
+| claude-desktop | Anthropic first-party Claude Code surfaces around Claude Desktop: the Code tab (Local, SSH, WSL 2 and cloud sessions; Dispatch), the Claude iOS/iPadOS app and claude.ai/code, Remote Control, and cloud sessions. Agent view is screened separately as agentview-a. | code.claude.com/docs/en/desktop |
+| intent | Intent by Augment Code | intentapp.dev |
+| agor | Agor (Preset): multiplayer web canvas and daemon | github.com/preset-io/agor |
+| parallel-code | Parallel Code: desktop app, phone web UI | github.com/johannesjo/parallel-code |
+| gas-city | Gas City (Gas Town Hall): orchestration SDK and controller | github.com/gastownhall/gascity |
+| agent-swarm | Agent Swarm (desplega.ai): lead and worker agents in containers | github.com/desplega-ai/agent-swarm |
+| conductor | Conductor (conductor.build) | conductor.build |
+| warp | Warp, two paths screened separately: (W1) the Warp client running the Claude Code and Codex CLIs, plus Warp Remote Control; (W2) Oz cloud harnesses | github.com/warpdotdev/warp, docs.warp.dev |
+| github-apps | Two components, screened separately: (G1) the Claude GitHub App with anthropics/claude-code-action; (G2) the ChatGPT Codex connector GitHub App (`@codex`) | github.com/anthropics/claude-code-action, Codex docs |
+| github-repos-issues | GitHub.com as glue: repos, issues, PRs, comments, Projects, GitHub Mobile and web. Excludes Actions-based agents and Copilot. | github.com |
+| vibe-kanban | Vibe Kanban (Bloop AI) | github.com/BloopAI/vibe-kanban |
+| agentview-a | Claude Code agent view (`claude agents`) | code.claude.com/docs/en/agent-view |
+| agentview-b | agentsview: session and transcript viewer for 20+ agents | github.com/kenn-io/agentsview |
+| tailwind | Read as **Tailscale**. No agent product called Tailwind exists, and Tailwind CSS cannot be a stack component. | tailscale.com, github.com/tailscale/tailscale |
+| obsidian-sync | Obsidian Sync, with Obsidian on Windows and iOS | obsidian.md/sync |
+
+Candidates from discovery are appended in 7.15.
+
+### 7.2 "Cross-mode" (A5, F6, F7, F8)
+- The modes are the user's two "Modes of working":
+  - **M1** = iPhone/iPad.
+  - **M2** = the always-on Windows PC, including its WSL2 distro.
+- **A5 test.**
+  - From M1, the user can browse the folder tree and read file contents of the agents' working directories on M2, including new and uncommitted files, no more than minutes stale.
+  - From M2, the user can see files produced by work started from M1, including work run in vendor clouds.
+  - PASS: both directions, covering the agents' workspaces.
+  - PARTIAL: committed or pushed state only (e.g. GitHub), diffs only, one direction only, or a synced folder that excludes the code workspaces.
+  - FAIL: none of these.
+  - An Obsidian vault counts as PASS only with evidence that agent workspaces can live in the synced vault and that their file types sync.
+- **F6:** from M1, load in a phone browser a dev server bound to localhost on M2 (Windows or WSL2).
+- **F7:** open a specific file from one mode in a viewer or editor on the other (rendered markdown, image, PDF, code).
+- **F8:** move files M1 → M2 into the agent workspace (e.g. a phone photo lands as a file) and M2 → M1 (e.g. save an artefact to iOS Files).
+
+### 7.3 NEVER gates
+- **N1 (stars)** is the GitHub-based gate. It applies only to open-source components, using the stars of the repo that holds the source.
+  - "Open source" includes source-available licences developed in a public GitHub repo (ELv2, BUSL, AGPL).
+  - Issue-only or release-only repos (e.g. anthropics/claude-code, docker/sbx-releases) do not make a product open source. N1 and F2 are then not applicable.
+  - Open-source client + closed service (Tailscale, Warp): use the client repo.
+- **N2 (single maintainer)** applies to every component. This is the conservative reading.
+  - **Open source.** Window: 2026-04-22 → 2026-10-19 on the default branch.
+    - Exclude bots: `*[bot]`, dependabot, renovate, github-actions, web-flow.
+    - Exclude AI-agent author identities, e.g. `noreply@anthropic.com` or Codex/Copilot authors; a `Co-authored-by` human counts as the author.
+    - **PASS:** at least 2 humans each either authored ≥10% of non-bot commits, merged at least one PR authored by someone else, or published a release in the window.
+    - **FAIL:** the project describes itself as one person's (e.g. "built by one person") and no primary source shows a second human merging others' PRs or publishing releases in the window. Or: no second human meets any PASS condition.
+    - **UNKNOWN:** the data cannot be obtained.
+  - **Closed source.**
+    - PASS: the vendor is an organisation with ≥2 people working on the product (team or about page, multiple staff in changelog or issues).
+    - FAIL: a sole-developer product.
+    - UNKNOWN: otherwise.
+- **N3 (abandoned, deprecated or archived)** applies to every component. **FAIL** if any of:
+  - (a) the repo is archived;
+  - (b) a primary vendor or maintainer notice of deprecation, sunsetting, end-of-life, shutdown, "no longer maintained" or maintenance-only exists, even if the software still works today;
+  - (c) open source: no non-bot commit to the default branch **and** no release in the last 90 days; closed source: no release or changelog entry in the last 90 days.
+  - **PARTIAL:** the last 90 days contain only bot or dependency commits. If the named surface is deprecated but the vendor ships a successor, screen the successor and record the named surface's status.
+
+### 7.4 A1 iPhone interaction
+- **Minimum.** From an iPhone, through a webapp or iOS app that is part of the stack, the user can:
+  - (i) list agent sessions and read their live or recent transcript;
+  - (ii) message a running session and answer its permission prompts or questions;
+  - (iii) start a new session, choosing the harness and the repo or working directory.
+- PASS needs (i)–(iii) **for both Claude Code and Codex sessions**. Different components may cover each harness. View-only or notifications-only = PARTIAL. None = FAIL.
+- **Generic terminals.** An iOS SSH/mosh terminal app, or a self-hosted web terminal, attached to the native TUI counts as "iOS app / webapp" only if all of these hold:
+  - the terminal app is a named stack component that passes N1–N3;
+  - sessions persist while the phone is disconnected (tmux or a supervisor);
+  - (i)–(iii) are achievable.
+  - It earns F3/F4 points only on the terminal app's own merits.
+- **Remote desktop** (pixel-streaming the Windows desktop) = PARTIAL.
+
+### 7.5 A2 audit trail
+- **"The platform"** = any stack component that starts sessions on the user's behalf: orchestrator and client layers, schedulers, GitHub triggers. A session it starts because an agent asked through its own MCP, API or tool counts as platform-launched.
+- **Test.** For every platform-launched session, a stack UI shows, during and after the run:
+  - the user prompt;
+  - the assistant messages;
+  - each tool call with its input and its result. Truncation is acceptable if it can be expanded or the full record is one click away.
+- Vendor TUIs (`claude --resume`, `codex resume`) and transcript viewers (e.g. agentsview) count as stack UIs. Raw JSONL with no renderer = PARTIAL.
+- One surface suffices for A2. Record separately whether the trail is visible on iPhone; that feeds F11e and the A1 notes.
+- **Not platform-launched:** sessions an agent starts through a shell command (e.g. `codex exec` inside Claude's Bash tool), and in-harness subagents. Judge these under A6b and F11c.
+
+### 7.6 A3 native subscription, A4 native harness, F1 official binary under its own login
+Grade every harness path a component uses.
+
+| Integration path | A4 | A3 | F1 |
+|---|---|---|---|
+| Unmodified `claude` CLI (TUI, `-p`, stream-json, `--bg`/agent view, `remote-control`) launched by the platform, using the login the user made with `/login` | PASS | PASS | PASS |
+| Unmodified `claude` with a user-minted `CLAUDE_CODE_OAUTH_TOKEN` (`claude setup-token`) injected into a container or CI | PASS | PASS | PARTIAL |
+| Claude Agent SDK, which runs the Claude Code binary, self-hosted, authenticated by the user's own Claude Code login | PASS if it keeps Claude Code's default system prompt (the `claude_code` preset or CLI default) and its standard tools; PARTIAL if it substitutes its own system prompt or tool set | PASS, provided the current Anthropic primary docs allow subscription use of the Agent SDK. FAIL if the tool offers claude.ai login itself, or collects, stores or relays tokens | PARTIAL (PASS only if pointed at the user's installed `claude` and its own login) |
+| ACP adapter on the Claude Agent SDK | as Agent SDK | as Agent SDK | PARTIAL |
+| Tool reads or copies Claude credential files or keychain tokens into its own agent loop or proxy | FAIL | FAIL | FAIL |
+| Unmodified `codex` CLI (TUI, `exec`, `resume`, `app-server` in managed ChatGPT login), the Codex SDK wrapping the binary, the IDE extension, the Codex/ChatGPT desktop app | PASS | PASS for local or self-hosted use | PASS |
+| `codex app-server` with externally managed ChatGPT tokens | PASS | PASS only with OpenAI-documented consent for local or open-source apps; else FAIL | PARTIAL |
+| ACP adapter on Codex | PASS if built on the official app-server or binary; PARTIAL if it embeds Codex crates | as app-server | PARTIAL |
+| Non-native harness on the user's ChatGPT or Claude plan (e.g. OpenCode or Pi with ChatGPT login) | FAIL | — | FAIL |
+| First-party vendor cloud (Claude Code cloud sessions, Codex cloud, `@codex` tasks), or a vendor-documented CI flow (e.g. claude-code-action with the user's `CLAUDE_CODE_OAUTH_TOKEN`, if Anthropic's docs allow it for subscriptions) | PASS | PASS | N/A (vendor-run) or PARTIAL (injected token) |
+| Third-party-hosted service running the user's plan credentials on its servers | PASS if the unmodified binary is used | PARTIAL unless the vendor documents an approved arrangement with Anthropic or OpenAI; FAIL if the docs forbid it | PARTIAL or FAIL |
+| API key only, with no subscription path | per harness | FAIL | per harness |
+
+- A relay that only forwards encrypted traffic between phone and PC, with credentials staying on the PC, does not affect A3.
+- **Both harnesses must be first-class.** The stack must let the user launch both Claude Code and Codex sessions; neither may be reachable only by asking the other agent to delegate. A component that runs only one harness natively gets PARTIAL for A3/A4 and needs a partner component for the other.
+
+### 7.7 A6 delegation, A7 artefact handover
+- **A6a:** the delegated session runs per a PASS row of 7.6, with no API-key fallback configured.
+- **A6b** needs primary evidence of three things:
+  - (1) where the delegated harness writes its full native transcript (Claude: `~/.claude/projects/...jsonl`; Codex: `$CODEX_HOME/sessions/...`);
+  - (2) that this storage outlives the delegated session and any sandbox: host path, bind mount or volume, export, or vendor-side history that keeps tool calls;
+  - (3) a retrieval path: `claude --resume`, `codex resume`, an app-server thread read, a file path, or a viewer.
+  - Claude Code deletes transcripts after `cleanupPeriodDays` (default 30). Raising that setting is a documented user configuration, so it is part of every stack's setup rather than a fail. Record it.
+  - Ephemeral sandboxes (Docker Sandboxes, cloud sessions, Actions runners) need documented persistence of the transcript; otherwise FAIL or UNKNOWN.
+- **A7:** a documented way to hand files or folders, not just prompt text, to the delegated session and back. Examples: shared path or worktree, shared mount, git branch push/pull, platform attachments or artifact API, object store.
+  - It must hold for every delegation topology the stack offers.
+  - If the stack runs sessions in separate sandboxes, the evidence must show handover crossing that boundary.
+  - If everything runs on one host, record the sandbox clause as "not exercised". The stack then cannot claim F9 points for sandbox topologies where A7 is not shown.
+
+### 7.8 A8 orchestrator support
+- **Create:** an agent in the stack programmatically starts a session of the *other* harness, with a prompt and working directory, non-interactively.
+- **Monitor:** it can query status and read progress or output during or after the run.
+- **Resume:** it can send a follow-up turn into the same session with context preserved.
+- All three are required in both directions (Claude→Codex and Codex→Claude), with A6a holding. One direction only = PARTIAL. A CLI workaround is acceptable: `PASS (workaround)`.
+
+### 7.9 C1 Windows PC and iPhone/iPad
+- **PC-side components** pass if they install on Windows 10/11 natively or inside WSL2.
+  - CLI, daemon or server with an official Linux install = `PASS (via WSL2)`.
+  - Linux GUI app under WSLg = `PASS (via WSL2/WSLg)` if the Linux build is official and not labelled experimental or beta, and no WSL incompatibility is documented. PARTIAL otherwise.
+  - macOS-only = FAIL.
+- **Cloud, SaaS and iOS components** pass if usable from both the iPhone/iPad and the Windows PC (app or browser).
+- Note whether the component runs unattended (service or daemon) or needs an open GUI window. The PC is always on, and the phone is first-class.
+
+### 7.10 FAVOUR tests
+- **F1:** see 7.6. The platform executes the unmodified official binary (or the vendor SDK or app-server that runs it), which authenticates with its own stored login; the platform never reads, copies or proxies tokens.
+- **F3:**
+  - PASS: an App Store app that works with the stack's agent sessions.
+  - PARTIAL: TestFlight only.
+  - FAIL: PWA or "Add to Home Screen" (that is a webapp).
+- **F4:**
+  - PASS: an iPad-specific layout (split or multi-column view, keyboard and pointer support, or App Store iPad screenshots), or a webapp with a documented tablet layout.
+  - PARTIAL: an iPhone app running scaled on iPad.
+- **F5:**
+  - PASS: a platform-launched session can be opened and continued, with the same history, in the vendor TUI (`claude --resume`, `codex resume`, or attaching to the TUI's tmux pane) or in the vendor desktop app.
+  - PARTIAL: read-only or fork-only.
+- **F9:**
+  - PASS: per-session environments defined by Dockerfile, image, compose or devcontainer, and the platform launches sessions inside them. microVMs built from images count.
+  - PARTIAL: only the platform's own server runs in Docker.
+- **F10:**
+  - PASS: stack-launched sessions appear with history in Claude Desktop **and** in the Codex desktop app or the ChatGPT desktop app's Codex surface, and can be continued there.
+  - PARTIAL: one vendor only, or only through a remote listing.
+- **F11a–F11e:** score per orchestrator or client component. The stack's score per sub-item is the best single component's score. Report the breakdown.
+
+### 7.11 Screen procedure (Stage 2)
+- **Order:** N3 → N1 → N2 → C1 → A1 → A3/A4. Stop at the first hard fail.
+- **Hard fails:**
+  - FAIL on N1, N2 or N3.
+  - FAIL on C1: a PC-side component with no Windows or Linux build, or a component unusable from either mode.
+  - FAIL on A1: a component that launches or hosts agent sessions whose sessions cannot be reached from an iPhone by any path in 7.4. For example, a desktop-only GUI whose sessions live only in its window.
+  - FAIL on A3/A4: a component that launches agents but can run **neither** harness per a PASS row of 7.6.
+- **Not hard fails:**
+  - A component that does not launch sessions gets `N/A (layer)` for A1, A3 and A4.
+  - Runs only one harness natively → PARTIAL; continue.
+- **Outcomes:**
+  - `SCREEN PASS`: every applicable check is PASS.
+  - `SCREEN FAIL at <ID>`.
+  - `SCREEN HOLD (<IDs>)`: no hard fail, but a PARTIAL or UNKNOWN on a check the component itself must satisfy. Finish the remaining checks and say what evidence would settle it.
+
+### 7.12 Stacks (Stage 4)
+- Every component passes N1–N3.
+- The whole stack passes A1–A8 and C1, with each gate cleared by a named component's PASS.
+- Glue components (e.g. an iOS terminal app, OS file sharing) may be used only if a subagent has screened them against N1–N3 and C1 with primary evidence.
+
+### 7.13 Hosted execution
+- Self-hosted on the user's PC is fine.
+- First-party vendor clouds (Anthropic, OpenAI) are fine.
+- Third-party-hosted execution with the user's plan credentials follows the 7.6 row ("Third-party-hosted service").
+
+### 7.14 Dates
+Policy pages change. For A3 evidence, cite the most recent dated primary page and quote it.
+
+### 7.15 Candidates added from discovery
+_Pending discover-candidates._
 
 ## 8. Working rules for every subagent
 
