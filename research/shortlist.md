@@ -1,23 +1,29 @@
 # Shortlist: agent orchestration setup for iPhone/iPad + an always-on Windows PC (WSL2)
 
-Prepared 2026-10-19. Inputs: 27 candidates screened, 16 deep-dived, then combined into stacks. The rules (gate IDs N1–N3, A1–A8, C1, F1–F11, verdict meanings) are in `research/brief.md`. Working detail is in `research/stacks.md`, and per-candidate evidence in `research/<slug>.md`.
+Prepared 2026-10-19. Inputs: 27 candidates screened, 16 deep-dived, then combined into stacks. An independent verifier then re-checked 90 claims against primary sources. It overturned no gate verdict and found one overclaim, now corrected; its caveats are folded in below (section 11 and `research/verification.md`). The rules (gate IDs N1–N3, A1–A8, C1, F1–F11, verdict meanings) are in `research/brief.md`. Working detail is in `research/stacks.md`, and per-candidate evidence in `research/<slug>.md`.
 
 ---
 
 ## 1. Recommendations (read this first)
 
 Four stacks clear every ALWAYS gate under the brief's binding interpretations. They are ranked by two things, in this order:
-1. Does the stack still clear the gates under the stricter alternative readings (section 6)?
+1. Does the stack still clear the gates under the strict alternatives to decisions 6–8 (brief 7.16) and under a defaults-only reading (section 6)?
 2. FAVOUR points.
 
 | # | Stack | Verdict | FAVOUR F1–F10 | FAVOUR F11 | Strict readings |
 |---|---|---|---|---|---|
-| 1 | **First-party pair:** Claude desktop app + ChatGPT desktop (Codex) + Tailscale, all Windows-native | CLEARS ALL ALWAYS GATES | 17/20 | 5/10 | Still clears under every one |
+| 1 | **First-party pair:** Claude desktop app + ChatGPT desktop (Codex) + Tailscale, all Windows-native | CLEARS ALL ALWAYS GATES | 17/20 | 5/10 | Still clears under every 7.16 strict reading and defaults-only* |
 | 2 | **Orca** + Tailscale, Windows-native | CLEARS ALL ALWAYS GATES | 16/20 | 10/10 | Nearest miss (A3 or A1) |
 | 3 | **T3 Code** + Tailscale, server in WSL2 | CLEARS ALL ALWAYS GATES (one setting needed) | 15/20 | 10/10 | Nearest miss (A3, A1, A2) |
 | 4 | **Maestro** + agentsview + Tailscale, Windows-native | CLEARS only with permission prompts switched off | 11/20 | 9/10 | Nearest miss (A1) |
 
 Ranked by FAVOUR total alone, the order would be Orca (26), T3 Code (25), first-party pair (22), Maestro (20).
+
+\*Two other strict alternatives hit every stack, Stack 1 included:
+- Keeping Claude's default 30-day transcript retention fails A6b everywhere (decision 11).
+- Treating Windows file sharing as a component removes Stack 1's SMB file route. Its A5 then rests on ChatGPT's project file browser alone (decision 12).
+
+The verifier flagged the earlier "every strict reading" wording as an overclaim.
 
 ### 1. First-party pair (safest)
 
@@ -25,12 +31,16 @@ Ranked by FAVOUR total alone, the order would be Orca (26), T3 Code (25), first-
 - Every agent runs in the vendors' own apps on the vendors' own logins. No third-party tool touches your Claude or ChatGPT credentials.
 - The Claude iOS app controls Claude Code sessions on the PC. The ChatGPT iOS app controls Codex on the PC.
 - Tailscale gives the iPhone the PC's live workspace folders in the Files app, plus localhost dev servers in Safari.
-- It is the only stack that passes under every strict reading.
+- It is the only stack that still passes under every 7.16 strict reading and a defaults-only reading (see the footnote above).
 
 **Weak spots**
 - Cross-agent delegation uses command-line calls (`codex exec`, `claude -p` or `claude --bg`), not first-class platform sessions. So F11 is only 5/10.
 - The Claude iOS app cuts approval commands and diffs at about 100 characters.
 - Each app must stay running (no Windows service mode).
+- **Codex→Claude via `claude -p`:**
+  - It needs network access, so Codex asks for approval on each call unless you add a rule.
+  - Anthropic's docs say `--bare` "will become the default for `-p`", and bare mode "never reads OAuth credentials". When that lands, use `claude --bg` hand-offs instead.
+- The SMB-over-Tailscale file route is documented but untested away from home (Tailscale #18967 is open).
 
 **Setup outline**
 1. Install Claude Desktop, the Claude Code CLI, the ChatGPT desktop app and the Codex CLI natively on Windows. Keep repos under `C:\`.
@@ -51,9 +61,10 @@ Ranked by FAVOUR total alone, the order would be Orca (26), T3 Code (25), first-
 
 **Setup outline**
 1. Install Orca and both CLIs natively on Windows, with repos on `C:\`.
-2. Keep Chat UI (experimental) off and the API-key variables unset.
-3. Raise `cleanupPeriodDays`.
-4. Pair the phone over Tailscale rather than Orca's relay.
+2. Set Agent Permissions to **Manual**. By default Orca launches Claude with `--dangerously-skip-permissions` and Codex with `--dangerously-bypass-approvals-and-sandbox` (found in verification).
+3. Keep Chat UI (experimental) off and the API-key variables unset.
+4. Raise `cleanupPeriodDays`.
+5. Pair the phone over Tailscale rather than Orca's relay.
 
 ### 3. T3 Code (strong alternative, runs unattended in WSL2)
 
@@ -177,12 +188,19 @@ Dates are source dates; "undated" pages were retrieved 2026-10-19.
 - **Phone access depends on running processes.** Remote Control servers and both desktop apps must be running, and the PC must stay awake.
 - **Cross-harness children are invisible as sessions.** Agents launch them through the CLI, so they don't appear as linked sessions in either app. Their transcripts survive on disk (A6b).
 - **Headless Claude depends on a paused policy change.** Anthropic paused a previously announced change to subscription use of `claude -p` and the SDK (Help Center notes 2026-06-15 and 2026-10-07). If it resumes, Codex→Claude delegation through `claude -p` may change; `claude --bg` is the fallback.
+- **`--bare` becoming the default for `-p`** (Anthropic docs, found in verification). Bare mode "never reads OAuth credentials", so headless `claude -p` would stop using your subscription unless bare is switched off. `claude --bg` hand-offs are the fallback.
+- **Codex network approvals** (verification). Each Codex→Claude call needs network access from Codex's sandbox: approve each call, or add a rule.
+- **SMB route untested away from home** (verification). Tailscale #18967 is open; use the MagicDNS hostname.
 
 ### Strict readings (section 6)
-No verdict changes:
+No verdict changes under the strict alternatives to decisions 6–8 or a defaults-only reading:
 - no beta-only capability is used in the core;
 - no third-party credential handling;
 - no third-party login path.
+
+**Corrected after verification:**
+- Under decision 11's strict alternative (default 30-day retention fails A6b), this stack fails A6b, like every other stack.
+- Under decision 12's (OS file sharing counted as a component), A5 rests on ChatGPT's project file browser alone, which needs every repo saved as a ChatGPT project.
 
 ---
 
@@ -247,15 +265,17 @@ All P links date 2026-10-17.
 1. **Installs.** Orca plus both CLIs natively on Windows, with repos on `C:\`. Log in with `/login` and `codex login`.
 2. **Environment hygiene.** Keep `ANTHROPIC_API_KEY`, `CLAUDE_CODE_OAUTH_TOKEN`, `CODEX_API_KEY` and `OPENAI_API_KEY` unset.
 3. **Experimental features off.** Settings → Experimental: Chat UI off; leave Cloud VM, Runs and the Agent Dashboard off.
-4. **Claude retention.** Raise `cleanupPeriodDays`.
-5. **Keep Orca running.** Tray on close; PC never sleeps.
-6. **Tailscale.** Pair the phone to `<pc-magicdns>:6768`. Optionally add the SMB share and Serve, as in Stack 1.
+4. **Agent permissions.** Settings → Agent Permissions → **Manual**. The default launches Claude with `--dangerously-skip-permissions` and Codex with `--dangerously-bypass-approvals-and-sandbox` (verification).
+5. **Claude retention.** Raise `cleanupPeriodDays`.
+6. **Keep Orca running.** Tray on close; PC never sleeps.
+7. **Tailscale.** Pair the phone to `<pc-magicdns>:6768`. Optionally add the SMB share and Serve, as in Stack 1.
 
 ### Risks
 - **Unavoidable token reads (7.16b).**
   - Orca reads both vendors' tokens with spoofed user-agents.
   - The phone can spend Codex reset credits.
   - The docs claim "No API calls, no extra auth".
+- **Permissions bypassed by default** (verification). Orca starts Claude with `--dangerously-skip-permissions` and Codex with `--dangerously-bypass-approvals-and-sandbox` unless Agent Permissions is set to Manual.
 - **Windows-host bug.** Mobile flicker (#30191).
 - **Low watcher count.** 152 watchers against 96.8k stars is unusual, though forks and author counts back the star figure.
 
@@ -317,7 +337,8 @@ All P links date 2026-10-15.
 2. **Service.** Run `t3 service install`, and add a Windows-side keep-alive for the distro.
 3. **T3 settings.**
    - Text generation → a Claude instance.
-   - Never use "Connect with ChatGPT" or profile transfer.
+   - "Connect with ChatGPT" is optional: OpenAI lists T3 Code as an open-source "Sign in with ChatGPT" integration (verification).
+   - Avoid profile transfer.
    - Never use T3 Connect.
 4. **Claude retention.** Raise `cleanupPeriodDays` in WSL2.
 5. **Phone pairing.** Tailscale on Windows, then `t3 serve --tailscale-serve` (or the tailnet IP with mirrored networking). Install App Store T3 2.0.0.
@@ -328,6 +349,7 @@ All P links date 2026-10-15.
 - **Version lock.** The V2 server needs the V2 app.
 - **Serve → WSL2 502** (#9228).
 - **Headless Claude policy.** The SDK path depends on Anthropic's paused change.
+- **Evidence note** (verification). The A5 permalink `WorkspaceEntries.ts#L215-L222` points at the wrong function. The verifier confirmed the claim from other source.
 
 ### Strict readings
 Becomes a NEAREST MISS under any of these:
@@ -392,6 +414,7 @@ All M and V links date 2026-10-09.
 - **Insecure phone link.** It is plain HTTP plus a token, so keep it tailnet-only.
 - **Untested recipe.** The A1 configuration has not been tried live.
 - **agentsview Resume API.** It can add `--dangerously-skip-permissions`, so always run agentsview with `require_auth`.
+- **Headless Claude policy** (verification). Maestro's default Claude path is `claude --print`, so it depends on Anthropic's paused policy change and on `--bare` not becoming the default for `-p`. Maestro's docs say `-p` bills API credit; Anthropic's Help Center (2026-10-07) says it uses subscription limits.
 
 ### Strict readings
 A defaults-only reading leaves Claude prompts unanswerable on the phone, so the stack becomes a NEAREST MISS (A1).
@@ -450,7 +473,7 @@ You asked for no questions during the run, so the orchestrator decided these. Fu
 |---|---|---|
 | Vibe Kanban | N3 | Company shut down 2026-04-10; README "Vibe Kanban is sunsetting." |
 | Paseo | N2 | "Maintained by one person, full time". |
-| Happy (CLI) | N3 | Maintenance mode since 2026-10-06. |
+| Happy (CLI) | N3 | Maintenance mode since 2026-10-06 (notice on the happy.engineering docs, not the README). |
 | Happy Desktop / Agent | N1 | 94 and 32 stars. It also reimplements Codex and replaces Claude's prompt and tools. |
 | code-server | N3, N2 | "not generally actively developing … aside from fixing regressions"; one maintainer merges everything. |
 | Warp Oz (cloud) | A3 | API keys only. |
@@ -471,3 +494,23 @@ You asked for no questions during the run, so the orchestrator decided these. Fu
 6. **Cloud sessions.** Do you want cloud sessions (Claude cloud, Codex cloud) in the daily flow? They are excluded from the core stacks: Codex cloud's tool-call fidelity is unverified, it has a "Legacy" deprecation notice, and cloud work reaches the PC only as branches.
 7. **Relays.** Is a vendor relay acceptable (Orca Relay, T3 Connect via Cloudflare), or Tailscale-only? Stacks 2 and 3 assume Tailscale-only.
 8. **Beta labels.** Are "beta"-labelled tools acceptable for daily work (Orca's mobile companion, T3 Code)? If not, see decision 6.
+
+## 11. Independent verification (Stage 5)
+
+A fresh agent got only `brief.md` and this shortlist. It re-checked the claims against primary sources and tried to falsify them. The full table is in `research/verification.md`.
+
+**Result**
+- 90 claims checked: 63 CONFIRMED, 26 CONFIRMED WITH CAVEAT, 1 REFUTED, 0 UNVERIFIABLE.
+- No ALWAYS or NEVER gate verdict was refuted, and the ranking is unchanged.
+
+**The refutation.** "Stack 1 is the only stack that passes under every strict reading" was too broad. It holds for the 7.16 strict alternatives and a defaults-only reading, but not for decisions 11 and 12, which affect every stack. Corrected in sections 1 and 2.
+
+**Caveats now folded in**
+- **Orca:** add Agent Permissions → Manual, because the defaults bypass approvals for both harnesses.
+- **Stack 1 and Maestro:** Codex network approvals for `claude -p`, and the future `--bare` default for `-p`.
+- **Stack 1:** the SMB route is untested away from home.
+- **T3 Code:** "Connect with ChatGPT" is permitted; one A5 permalink was wrong, but the claim holds.
+
+**Policy facts re-confirmed, with dates in `verification.md`:**
+- Anthropic: `claude -p` and the Agent SDK still use subscription limits (2026-10-07); developers "may not collect, store, or intermediate" claude.ai tokens.
+- OpenAI: ChatGPT sign-in is subscription access, with a documented route for open-source and local apps; "Codex Cloud (Legacy)": "We plan to deprecate this experience".
