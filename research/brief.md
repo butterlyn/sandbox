@@ -468,6 +468,12 @@ Two screens graded the same facts differently, so these rules replace the ambigu
   - Every other gate is judged as usual.
 - **New candidates:** "Bernstein", "cmux", AWS's "CLI Agent Orchestrator" (the user confirmed "awe's" meant AWS), and "wmux" and "tmux", which the user describes as "cmux for windows/WSL2", i.e. the PC-side terminal/multiplexer layer. The user notes cmux may be a candidate in its own right or a component of a combined stack. Identities are resolved in `research/resolve.md` section D and listed in 7.19.
 
+### 7.20 Rulings in the update round (2026-10-19)
+- **tmux N2: PASS (narrow).**
+  - 7.3 counts non-bot commits a human authored. Thomas Adam authored 19.5% of non-bot commits in the window, mostly merges of the OpenBSD tree into the portable repo. 27 of those had hand-resolved conflicts, which is maintainer work.
+  - Strict alternative: count only non-merge commits and PR merges into `master`. tmux then FAILS N2, and stacks that depend on tmux (Gas City, CAO, terminal stacks) lose their runtime. The final report must show this.
+- **Given (7.12 extension):** the WSL2 distro's own OpenSSH server (`openssh-server` from the distro's official repository) counts as OS plumbing, like Windows' built-in OpenSSH Server. Mosh is not a given; it is unscreened, so avoid it.
+
 ### 7.19 Candidates added by the user (identities from resolve.md section D)
 
 | slug | canonical product and scope | where to start |
