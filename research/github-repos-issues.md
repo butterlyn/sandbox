@@ -72,6 +72,77 @@ These are not gate verdicts. The "Indicative" column says what this component al
 | Task queue and log (context for A2, A6b, A8) | **From the phone (App Store):**<br>- "Read, react, and reply to Issues and Pull Requests"<br>- "Review and merge Pull Requests"<br>- "Organize Issues with labels, assignees, projects, and more"<br>**Also from the phone:**<br>- Project views and field edits (2023).<br>- "Receive a push notification when someone mentions your username" (docs).<br>**From agents:** the same objects, through the REST and GraphQL APIs (issues, comments) or `gh`.<br>**Limit:** comments hold only what an agent chooses to post. They are not the native transcript (no tool calls), so on their own they add nothing to A2 or A6b. | Context only | https://apps.apple.com/us/app/github/id1477376905 · https://github.blog/changelog/2023-03-14-projects-on-github-mobile-is-now-generally-available · https://docs.github.com/en/rest/issues/comments | 2026-10-15 · 2023-03-14 · undated, retrieved 2026-10-19 |
 | Out of scope (7.1) | GitHub Mobile's Copilot tab hosts three kinds of session:<br>- the Copilot cloud agent;<br>- Copilot CLI remote control: "Remote control your Copilot CLI sessions from GitHub Mobile and VS Code" (1.257.0);<br>- the partner Claude and Codex agents, which are billed to Copilot ("one premium request" per session). Version 1.276.0 adds: "@-mentions for agents such as Claude and Codex now work in pull request comments".<br>Excluded under 7.1. A stack must not count these sessions toward A1 or A3. | Excluded | https://github.blog/changelog/2026-02-26-claude-and-codex-now-available-for-copilot-business-pro-users · https://apps.apple.com/us/app/github/id1477376905 | 2026-02-26 · 2026-09-10 (1.276.0) |
 
+## Deep-dive
+Checked 2026-10-19 by deepdive-github-repos-issues. This is a layer component, so each gate row says what GitHub contributes to a stack. The stack verdict is set at Stage 4.
+
+### ALWAYS gates
+| ID | Verdict | Evidence (short quote or exact paraphrase) | Source URL | Source date |
+|----|---------|---------------------------------------------|------------|-------------|
+| A1 | N/A (layer) | Hosts no in-scope agent session. GitHub Mobile is the queue, review surface and file viewer. Its Copilot-billed Claude and Codex agents are excluded (7.1; screen A1 row). | https://github.blog/changelog/2026-02-26-claude-and-codex-now-available-for-copilot-business-pro-users | 2026-02-26 |
+| A2 | N/A (layer) | Issue and PR comments hold only what an agent chooses to post. They are not the native transcript with each tool call's input and result. The REST API returns comment `body` / `body_text` / `body_html` and nothing more. | https://docs.github.com/en/rest/issues/comments | undated, retrieved 2026-10-19 |
+| A3, A4 | N/A (layer) | Runs no harness and holds no Claude or ChatGPT credentials (screen rows). | (screen) | — |
+| A5 | PARTIAL | **What GitHub shows:** committed and pushed state only. 7.2 names "committed or pushed state only (e.g. GitHub)" as PARTIAL. No GitHub feature syncs a local working tree; Codespaces would be a cloud machine, not M2.<br>**Workaround that narrows staleness but not the grade:** a per-turn hook in each harness that runs `git add -A && git commit && git push` to a WIP branch.<br>- Claude: "`Stop` — When Claude finishes responding"; "Hooks are user-defined shell commands".<br>- Codex: a `Stop` hook, with "`command` and `mcp_tool` handlers".<br>**Why it stays PARTIAL:**<br>- Ignored files (`.env`, build output, `node_modules`) and mid-turn state never appear.<br>- WIP commits pollute history.<br>- Human edits made outside a turn are not pushed.<br>**Reverse direction:** cloud work reaches the PC as pushed branches (A7 row). | https://code.claude.com/docs/en/hooks · https://learn.chatgpt.com/docs/hooks | undated, retrieved 2026-10-19 (both) |
+| A6a | N/A (layer) | Runs no delegated agent. | — | — |
+| A6b | PASS (workaround). Composed from documented parts; not tested end to end. | **(1) Where the transcript is written.** Harness docs: Claude `~/.claude/projects/…jsonl`, Codex rollout files.<br>**(2) Storage that outlives the sandbox.** Both harnesses pass hooks the transcript path and let them run commands, so a hook can copy the JSONL into a clone of a private archive repo and `git push` before teardown.<br>- Claude: common input "`transcript_path` — Path to conversation JSON"; "Command hooks receive JSON data via stdin".<br>- Codex: shared field "`transcript_path` … Path to the session transcript file, if any"; "`command` and `mcp_tool` handlers are supported".<br>**(3) Retrieval.** `git clone` or `git pull`, then open the file or point a viewer at it (e.g. agentview-b's extra `dirs`).<br>**Caveats:**<br>- Claude `SessionEnd` hooks "share a 1.5-second budget" (raisable via the per-hook `timeout`, "up to 60 seconds"). The transcript "is written asynchronously and may lag", so pair `Stop` with `SessionEnd`.<br>- Codex `SessionEnd` "runs for the main thread when you archive or delete a conversation that's still open", so `codex exec` runs need the per-turn `Stop` hook.<br>- Codex: "the transcript format isn't a stable interface for hooks". A byte copy is unaffected.<br>- Codex: "Non-managed hooks must be reviewed and trusted before they run".<br>- GitHub limits: per object "The recommended maximum limit is 1MB. This is enforced at 100 MB"; on-disk 10 GB; "Push size … enforced at 2GB".<br>- The sandbox needs push rights to the archive repo. Use a token scoped to that repo only.<br>- Transcripts can contain secrets, so keep the repo private. | https://code.claude.com/docs/en/hooks · https://learn.chatgpt.com/docs/hooks · https://docs.github.com/en/repositories/creating-and-managing-repositories/repository-limits | undated (the Claude hooks page cites versions up to v2.1.295), retrieved 2026-10-19 |
+| A7 | PASS (workaround) | Git branches hand files and folders between sessions, including across separate sandboxes and vendor clouds.<br>**Claude cloud:**<br>- "Cloud sessions need access to your GitHub repositories to clone code and push branches".<br>- "The cloud VM clones your current directory's GitHub remote at your current branch, not your local checkout, so push first".<br>- `--teleport` "fetches and checks out the branch from the cloud session".<br>- "repository cloning and pull request creation require GitHub".<br>**Codex cloud:** "Connect GitHub if prompted"; when a task finishes you "commit or open a pull request".<br>**PC sessions (Windows or WSL2):** the same remote.<br>**Limits:**<br>- Only committed files travel. Claude's bundle rule says "Untracked files are not included; run `git add`", and ignored files never travel.<br>- 100 MB per object enforced; 2 GB per push.<br>- Line endings must be consistent across Windows and WSL (screen C1 row).<br>**Caveat:** research/github-apps.md quotes OpenAI's "Codex Cloud (Legacy) … We plan to deprecate this experience" for the GitHub-triggered `@codex` path. learn.chatgpt.com/docs/cloud carries no Legacy label (retrieved 2026-10-19). So Codex-cloud handover is documented today, but its `@codex` trigger has a deprecation notice. | https://code.claude.com/docs/en/claude-code-on-the-web · https://learn.chatgpt.com/docs/cloud · https://docs.github.com/en/repositories/creating-and-managing-repositories/repository-limits | undated, retrieved 2026-10-19 (all three) |
+| A8 | N/A (layer) | Within scope, GitHub creates, monitors and resumes no harness session; Actions-based agents are excluded (7.1). Issues can carry task text for agents to pick up, but that is not session control. | (screen) | — |
+
+### FAVOUR scores
+| ID | Verdict | Points | Evidence | Source URL | Source date |
+|----|---------|--------|----------|------------|-------------|
+| F1 | N/A (layer) | 0 | Runs no harness binary. | — | — |
+| F2 | N/A (closed source) | 0 | 7.3: N1/F2 apply only to open-source components. | https://apps.apple.com/us/app/github/id1477376905 | 2026-10-15 |
+| F3 | N/A (layer) | 0 | GitHub Mobile is a native App Store app, but it is not the stack's agent interface: no in-scope sessions run in it (7.1). | https://apps.apple.com/us/app/github/id1477376905 | 2026-10-15 |
+| F4 | PASS | 2 | Universal app with an iPad sidebar layout, hardware-keyboard Escape, iPadOS pointer handling and iPad App Store screenshots (screen F4 fact). | https://apps.apple.com/us/app/github/id1477376905 · https://github.blog/changelog/2024-10-14-whats-new-in-mobile-october-update | 2026-10-15 · 2024-10-14 |
+| F5 | N/A (layer) | 0 | No agent sessions. | — | — |
+| F6 | N/A (layer) | 0 | No path to a PC localhost. Codespaces port forwarding is out of scope. | — | — |
+| F7 | PARTIAL | 1 | **M2→M1:** pushed files open rendered in the app.<br>- "Markdown, image, and PDF files now render if you click on them while browsing code" (v1.2, 2020-06-22).<br>- SVG rendered as images (1.273.0, 2026-08-21).<br>- Mermaid and math in issues (screen F7 fact).<br>**Limits:**<br>- Pushed files only.<br>- In-app PDF rendering was last documented in 2020.<br>- No primary statement on syntax highlighting.<br>**M1→M2:** files edited or committed from the app, or attached to comments, open on the PC in a browser or after `git pull`. | https://github.blog/changelog/2020-06-22-github-for-mobile-1-2-is-now-available-with-improvements-to-files-changed-and-reviewing-code · https://apps.apple.com/us/app/github/id1477376905 | 2020-06-22 · 2026-10-15 |
+| F8 | PARTIAL | 1 | **M1→M2:**<br>- Media attachments work from the app: video upload "everywhere you can author Markdown in GitHub, including from the mobile app" (2021).<br>- An agent pulling them from a private repo has no documented endpoint, only a staff workaround (Q1).<br>- Non-media uploads from iOS are undocumented.<br>**M2→M1:**<br>- Agents push files, which the phone opens in the app.<br>- `gh --attach` (v2.99.0) posts media only and needs "Write access to the repository".<br>- Release assets download on the phone (2021).<br>- Saving into iOS Files is undocumented. | https://github.blog/changelog/2021-05-13-video-uploads-now-generally-available · https://github.blog/changelog/2026-09-01-github-cli-media-in-issues-pull-requests-and-comments · https://github.blog/changelog/2021-03-16-github-mobile-now-supports-github-releases | 2021-05-13 · 2026-09-01 · 2021-03-16 |
+| F9 | N/A (layer) | 0 | No session environments. | — | — |
+| F10 | N/A (layer) | 0 | No sessions. | — | — |
+| F11a–F11e | N/A (layer) | 0 | Launches no sessions; delegated sessions can't be first-class here. | — | — |
+
+**Subtotals:** F1–F10 = 4/20; F11a–F11e = 0/10.
+
+### Harness integration
+- Not applicable. Within scope, GitHub.com and GitHub Mobile invoke neither `claude` nor `codex`; the Copilot-billed partner agents are excluded (7.1).
+- **OAuth credentials:** none of the user's Claude or ChatGPT credentials are read, copied or proxied. GitHub credentials enter the stack in three places:
+  - (a) git push and pull from the PC, via Git Credential Manager or a `gh` token;
+  - (b) the A6b archive hook inside sandboxes. Use a fine-grained token limited to the archive repo; Claude's cloud sessions instead push through Anthropic's GitHub proxy ("your GitHub credentials stay encrypted on Anthropic's servers and never enter a session's VM");
+  - (c) downloading private attachments. GitHub staff say this needs an OAuth token with `user` and `repo` scopes or a PAT, which is a broad grant: keep it out of sandboxed agents.
+
+### Stack fit
+- **Covers:** sync of committed state; the handover medium (A7); a transcript-archive target (A6b workaround); a task queue and review surface on iPhone/iPad.
+- **Complements the orchestrators:**
+  - Issues as the task queue: create, label or assign from the phone; agents read them through REST or `gh`.
+  - PRs as the review surface: review and merge from GitHub Mobile (iPad layout, F4).
+  - Branches as the bridge between PC sessions and Claude or Codex cloud sessions.
+- **Needs from other components:** A1, A2, A8, live uncommitted A5, F6, and fuller F7/F8 (e.g. a sync layer or the orchestrator's own file browser).
+- **Conflicts and risks:**
+  - The view shows committed state only.
+  - Transcripts can carry secrets: keep the archive private.
+  - Attachment retrieval needs broad token scopes, and the signed URLs expire after about 5 minutes.
+  - Windows/WSL line endings.
+  - `gh` (cli/cli) and the GitHub MCP server are not screened, so a stack that leans on them for the issue queue or `--attach` needs a glue screen first.
+  - GitHub Mobile's Copilot-billed Claude and Codex agents must not count toward A1 or A3.
+
+### Specific questions
+- **Q1. Can an agent on the PC retrieve files the user attached from iOS to an issue in a private repo (F8)? PARTIAL: no documented endpoint, only a staff-described workaround I did not test.**
+  - GitHub (changelog, May 9, 2023): "future attachments associated with private repositories can only be viewed after logging in". It says nothing about API access.
+  - GitHub staff (vtbassmatt) in the official GA discussion:
+    - "You'll need an OAuth token with `user` and `repo` scopes" (2023-05-12);
+    - "Yes, a PAT will work here too" (2023-05-15);
+    - you can let GitHub render the full body or "scrape the asset URLs out of the raw Markdown" (2023-06-08);
+    - "In the future, we hope to introduce an API endpoint specific to assets" (2023-06-08).
+    - On the signed-URL lifetime: "I'm not saying we nailed it with 5 minutes".
+  - The REST comments API documents `application/vnd.github.full+json`, which returns `body_html`. That is the rendered body an agent would read signed URLs from. Whether those URLs are included is not documented.
+  - `gh` v2.99.0 (2026-09-01) adds upload only: it "uploads a local image or video and references it inline". It has no download or view flag.
+  - I found no asset-download endpoint as of 2026-10-19.
+- **Q2. Can GitHub Mobile render code, markdown, images and PDFs (F7)? Yes for markdown, images and SVG; PDF last documented in 2020; code is browsable.** Code: "Browse your files and code" (App Store, 2026-10-15), with no syntax-highlighting statement found. All of it applies to pushed files only.
+- **Q3. Is there a documented auto-sync or near-real-time path that lifts A5 above PARTIAL? No.**
+  - GitHub documents no working-tree sync.
+  - Per-turn WIP-push hooks, built from documented harness hooks, cut staleness to one turn. But the view is still committed state that excludes ignored files, which is 7.2's named PARTIAL case.
+
 ## Open questions
 - **Is git a given or a component?** The PC side of C1, and every A5/A7 use of GitHub, relies on git. Natively that means Git for Windows with Git Credential Manager; in WSL2, the distro's git.
   - 7.12's list of givens does not name git.
@@ -90,3 +161,13 @@ These are not gate verdicts. The "Indicative" column says what this component al
   - In-app PDF rendering was last documented in 2020 (v1.2).
   - These affect F7 and F8 detail. A release note or a device test would settle them.
 - **Uploading to a repo from iPhone Safari.** GitHub documents "Add file > Upload files" for "a browser" without naming iOS. Safari's file picker is an Apple given that still needs an Apple source. This affects F8 (M1→M2 into the repository).
+- **Added by deep-dive (2026-10-19).**
+  - **Status of the git question above:** settled by brief 7.12, which now lists git as a given. The brief's stated reason is inaccurate; see the Summary update.
+  - **Does the A6b hook-to-repo recipe work in each sandbox a stack uses?**
+    - Docker Sandboxes: is push access to an archive repo possible from inside?
+    - Claude cloud sessions: they push through Anthropic's GitHub proxy; does that proxy reach a second, archive-only repo?
+    - Codex cloud: hooks inside cloud tasks are undocumented.
+    - This decides A6b for the sandboxed topologies. Settle with a test per sandbox.
+  - **Does the REST API's `body_html` (`application/vnd.github.full+json`) return fresh signed URLs for private-repo attachments today?** The only evidence is GitHub staff comments from 2023. This decides F8 M1→M2 (PARTIAL now) and any A7 use of attachments. Settle with a test using the user's token.
+  - **`gh` (cli/cli) and the GitHub MCP server are unscreened.** If a stack relies on them for the issue queue or `--attach`, each needs an N1–N3 glue screen (7.12).
+  - **Does the `@codex` GitHub path's deprecation notice also cover Codex cloud's GitHub connection?** research/github-apps.md quotes "We plan to deprecate this experience"; learn.chatgpt.com/docs/cloud carries no Legacy label. This decides whether A7 via Codex cloud counts as a long-lived topology.

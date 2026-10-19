@@ -398,7 +398,7 @@ Grade every harness path a component uses.
 - Every component passes N1–N3.
 - The whole stack passes A1–A8 and C1, with each gate cleared by a named component's PASS.
 - Glue components (e.g. an iOS terminal app or a sync tool) may be used only if a subagent has screened them against N1–N3 and C1 with primary evidence.
-- **Givens, not components:** the user's platforms and their built-in features, plus the two harness CLIs. That covers Windows 10/11 (including Windows file sharing over SMB), WSL2, iOS/iPadOS (including the Files app and Safari), and the `claude` and `codex` CLIs, plus git (Claude Code on Windows requires Git for Windows). They need no NEVER screening, but any claim that relies on them still needs a primary source (e.g. Microsoft, Apple, Anthropic or OpenAI docs).
+- **Givens, not components:** the user's platforms and their built-in features, plus the two harness CLIs. That covers Windows 10/11 (including Windows file sharing over SMB), WSL2, iOS/iPadOS (including the Files app and Safari), and the `claude` and `codex` CLIs, plus git (the repo tool every candidate orchestrator builds on for worktrees and hand-over; Anthropic lists Git for Windows as optional for Claude Code itself). They need no NEVER screening, but any claim that relies on them still needs a primary source (e.g. Microsoft, Apple, Anthropic or OpenAI docs).
 - **Screened out, so not usable even as glue:** any component with `SCREEN FAIL` (see each candidate's file).
 
 ### 7.13 Hosted execution
