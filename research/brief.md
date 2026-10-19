@@ -459,6 +459,15 @@ Two screens graded the same facts differently, so these rules replace the ambigu
 - **Configuration.** Every condition the stack relies on (7.16c settings, environment variables that must stay unset, `cleanupPeriodDays`, file placement, auth settings) is a numbered setup step.
 - **Strict alternatives.** For each stack, state which verdicts change under each 7.16 strict alternative.
 
+### 7.18 User directives after the first shortlist (2026-10-19)
+- **Superset C1.** The user directs: "Assume superset can run on windows via WSL2 installation."
+  - Superset's C1 is therefore `PASS (user assumption)`.
+  - The assumption covers installing and running Superset's desktop app and/or host service inside WSL2, including WSLg.
+  - Do not re-fail any other gate because the Linux/WSL2 build is labelled experimental or pre-release.
+  - Record the vendor's own statements as risks, not failures: the Linux desktop app is "experimental and untested", the host CLI is Beta/pre-release, and WSL support is "not at least for a few months" (#1993).
+  - Every other gate is judged as usual.
+- **New candidates:** "Bernstein" and "cmux". The user notes cmux may be a candidate in its own right or a component of a combined stack. Identities are resolved in `research/resolve.md` section D and listed in 7.19.
+
 ### 7.15 Candidates added from discovery
 Proposals and evidence are in `research/discovery.md`.
 
