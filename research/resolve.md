@@ -389,3 +389,53 @@ Each item gives: criterion · ambiguity · proposed reading (an operational test
 6. **A2 (B.7):** must the tool-call audit trail be visible on the iPhone itself? Could fail mobile-first candidates whose clients hide tool calls.
 7. **A3/A4 (B.8):** is the Claude Agent SDK (which runs the Claude Code binary) under the user's own login a native harness on the native subscription? And are vendor-hosted executions with the user's plan credentials acceptable? Decides agor, and possibly agent-swarm, warp Oz and other SDK-based or hosted paths.
 8. **A8 (B.10) and A3/A4 (B.13-h):** must cross-harness orchestration work in both directions, and must both harnesses be first-class? Decides Claude-only stacks.
+
+---
+
+## D. Additions (2026-10-19)
+
+The user added two candidates after the first shortlist. Same rules as section A: identity and scope only; facts that bear on gates are leads, not verdicts. Sources retrieved 2026-10-19 via WebFetch, plus a read-only anonymous clone for Bernstein.
+
+| slug | user's name | canonical name | canonical URL(s) | GitHub repo (licence) | layer(s) | one-line description | conf. | alternatives considered → why rejected |
+|---|---|---|---|---|---|---|---|---|
+| bernstein | Bernstein | Bernstein ("the open-source governance layer for AI agents") | https://github.com/sipyourdrink-ltd/bernstein (github.com/chernistry/bernstein renders as this repo) · docs https://bernstein.readthedocs.io · PyPI `bernstein` (3.x) | sipyourdrink-ltd/bernstein (Apache-2.0; ~1.3k★, 184 forks displayed) | orchestrator, client/UI | Deterministic Python scheduler (no LLM in the coordination loop) that runs CLI coding agents in parallel, each in its own git worktree, behind lint/type/test gates. Records lineage and a replay journal, with an opt-in HMAC-chained audit log. Supports 50+ agents including Claude Code and Codex. Dashboards: `bernstein live` (TUI) and `bernstein gui serve` (browser). | high | No other agent product called Bernstein found (search, 2026-10-19). The chernistry and sipyourdrink-ltd owners are the same repo, not two products. |
+| cmux | cmux | cmux by Manaflow: "Open source Ghostty-based macOS terminal with vertical tabs and notifications for AI coding agents" | https://cmux.com (www.cmux.dev 301-redirects here) · https://github.com/manaflow-ai/cmux · https://cmux.com/agents/claude-code · https://cmux.com/agents/codex | manaflow-ai/cmux (GPL-3.0-or-later for the app; server parts `web/`, Cloudflare workers and relay services under BUSL-1.1; ~28.3k★, 2.5k forks displayed) | PC terminal/multiplexer (client/UI on the PC); orchestrator-lite (scriptable panes); client/UI (iOS companion, beta); runtime (cloud VMs, early access) | Native Swift/AppKit terminal built on libghostty. Workspaces and splits per task; notification rings driven by OSC 9/99/777 or agent hooks. A CLI and Unix-socket API let agents create workspaces, split panes, send keystrokes, read screen contents and drive a built-in browser. Claude Code teammates and subagents appear as native splits. `cmux ssh` and remote-tmux attach (beta). iOS companion "cmux BETA" on TestFlight pairs through the Mac's Mobile Connect window to attach to terminals. | high | **cmux.dev**: Manaflow's earlier "universal AI coding agent manager" (VS Code workspaces in cloud or local Docker); the domain now 301-redirects to cmux.com, so it is the same vendor's superseded product. **coder/cmux**: Coder's "Coding Agent Multiplexer" was renamed Mux, then Xum (the page now shows coder/xum, AGPL-3.0, ~2.1k★), and it runs "a custom agent loop", not Claude Code or Codex. No longer called cmux. **craigsc/cmux**: "tmux for Claude Code", a bash worktree manager, ~605★, Claude-only. Far less known. None is as plausible as manaflow-ai/cmux, so there is one row only. |
+
+### D.1 cmux: where it could fit in a combined stack
+
+- **PC terminal / multiplexer (primary role).** Hosts the unmodified `claude` and `codex` TUIs in per-task workspaces and splits, with attention notifications. cmux's Codex page says "the OpenAI Codex CLI runs in it out of the box" and does not mention handling credentials. That makes it a plausible F5 surface (native TUI) and keeps A3/A4 on the official binaries. Verify in screening.
+- **Orchestrator-lite.** Through the CLI and Unix-socket API, an agent in one pane can open a sibling pane, start the other harness's TUI there, send it input, and read its screen. That is a native-TUI route for A8 (create, monitor, resume) and F11a/b/d. There is no task queue or scheduler, so it would pair with a real orchestrator, or with the agents' own delegation.
+- **Client/UI (iPhone).** The iOS companion (TestFlight beta) attaches to cmux terminals from the phone. That would cover A1 and F3, but TestFlight-only scores F3 PARTIAL under 7.x/B.13-e. It pairs via the Mac's Mobile Connect window. The relay is BUSL-1.1 source.
+- **Runtime.** Cloud VMs are in early access for Founder's Edition supporters. `cmux ssh` and remote-tmux attach let a Mac running cmux front a remote host, such as WSL2 on the PC over Tailscale SSH.
+- **Natural pairings.**
+  - claude and codex CLIs (native harnesses);
+  - tmux on the host;
+  - Tailscale, for SSH reachability of the PC;
+  - agentsview, for transcript audit (A2, A6b);
+  - Claude Code agent teams.
+- **Platform lead (not a verdict).**
+  - The app is macOS-only. The repo FAQ says it is a native Swift/AppKit app, macOS-only "for now".
+  - Every artefact on the releases page is a macOS DMG or xcframework (e.g. pre-release `nightly-next` 04 Oct, `cmux-app-ffi-…` 18 Oct).
+  - cmux.com mentions other builds "coming" with a waitlist and no timeline; the Codex page offers only a Mac download.
+  - The user's devices are an iPhone/iPad and a Windows PC. No device of theirs can host the cmux app or the iOS companion's pairing, unless a Mac is added. As a candidate in its own right or as a stack component, it therefore runs straight into C1. Screening should confirm.
+
+### D.2 Bernstein: discovery note confirmed and corrected
+
+- **Confirmed.** It is a CLI-agent orchestrator, and its README says beta: "**Status: beta.** Solo-maintained, under active development. The version number counts releases, not maturity - minor versions may change interfaces." That is README.md line 38 at commit `920d400fec4aac122f554b1cf8845880ee37438f`, HEAD on 2026-10-19.
+- **Correction 1: canonical repo.** It is `sipyourdrink-ltd/bernstein`. The `chernistry/bernstein` URL renders as that repo.
+- **Correction 2: it is more than "beta, unverified".** The README self-describes as **solo-maintained** twice: line 38, and line 257 "Apache 2.0, solo maintained." That is a direct lead for N2 under 7.3/B.2, where self-description is decisive.
+- **Harness lead (for screening, not a verdict).**
+  - It spawns the official `claude` CLI headless with `--output-format stream-json` and `-p <prompt>`: https://github.com/sipyourdrink-ltd/bernstein/blob/920d400fec4aac122f554b1cf8845880ee37438f/src/bernstein/adapters/claude.py#L479-L544.
+  - It filters `ANTHROPIC_API_KEY` into the environment when set (L989).
+  - It spawns the `codex` CLI. It accepts either `OPENAI_API_KEY` or the ChatGPT session that "`codex login` stores in ~/.codex/auth.json", checking only that the file exists: https://github.com/sipyourdrink-ltd/bernstein/blob/920d400fec4aac122f554b1cf8845880ee37438f/src/bernstein/adapters/codex.py#L84-L88 and L219.
+- **Platform lead.**
+  - Python 3.12+; installs via uv, pipx, pip, brew, dnf, npm, Docker or devcontainer.
+  - Windows and WSL support are not stated (WSL2 via Linux install is the likely path; K1).
+  - Mobile: none mentioned; only the browser dashboard, reachable over a network.
+
+### D.3 Repos for these additions
+
+```
+sipyourdrink-ltd/bernstein
+manaflow-ai/cmux
+```
