@@ -16,6 +16,14 @@
 ## Summary
 - Screen (T1 Termius): **SCREEN PASS**
 - Screen (T2 Blink Shell): **SCREEN FAIL at N2**
+- Deep-dive (T1 Termius only, 2026-10-19):
+  - **Gates:**
+    - A1 PASS (7.4, with tmux and a WSL2 keep-alive).
+    - A5 PASS, configuration-scoped: SFTP browse, preview and open, live. `C:\` goes via Windows OpenSSH; WSL2 ext4 via the distro's sshd over Tailscale (mirrored networking or portproxy).
+    - A2, A3, A4, A6, A7, A8: N/A (layer).
+  - **FAVOUR:** F1–F10 = 11/20 (F3 2, F4 2, F5 2, F6 1, F7 2, F8 2). F11a–e = 4/10 (c 1, d 2, e 1).
+  - **Setup must turn off:** Pro session logging (on by default; it records all terminal text) and the AI widget, whose data flow is undocumented.
+  - **No push notification** when an agent waits.
 - **Termius passes every applicable check:**
   - **N3:** seven iOS releases since 2026-08-09; the latest is 8.0.3 on 2026-10-14.
   - **N2:** Termius Corporation is an organisation. YC lists "Team Size: 35" and two founders, and the vendor is hiring a "Mobile Tech Lead/ Architect (iOS & Android)".
@@ -86,7 +94,101 @@ These are not gates. The verdicts are this screen's indicative reading, to be re
 | Other (A5/F6/F7/F8), not asked | **Files (M1 → M2):**<ul><li>SFTP on iOS/iPadOS: multiple SFTP tabs, drag and drop from the Files app, and an Upload button.</li><li>Pasted images and files upload "in the background over SFTP to `/tmp`", and the "path is inserted into your terminal automatically" (7.5.0; Mosh sessions from 7.8.0). That lands phone files in an agent prompt (F8).</li></ul>**Dev servers (F6):** local port forwarding can open a PC dev server on the phone. However, tmux does "not help if the app goes to the background while port forwarding is active". Tailscale Serve is the sturdier F6 path. | Partial contributions; verify at Stage 4 | https://docs.termius.com/organize-and-connect-to-hosts/managing-files-with-sftp · https://docs.termius.com/terminal/mobile-terminal · https://docs.termius.com/organize-and-connect-to-hosts/port-forwarding-and-tunneling · https://docs.termius.com/help-center/faq/how-can-i-keep-termius-sessions-alive-in-the-background-on-ios-ipados | undated, retrieved 2026-10-19 |
 | Setup | Numbered steps for any Termius + tmux stack:<ol><li>Windows OpenSSH Server set to Automatic, or `sshd` in WSL2 with mirrored networking.</li><li>`.wslconfig` `[general] instanceIdleTimeout=-1`.</li><li>One tmux session per agent, e.g. `tmux new -A -s <name> -c <repo> claude` (or `codex`), optionally as a Termius startup snippet (Pro).</li><li>Vendor logins on the PC, or Termius session logging off for that vault.</li><li>Mosh only if `mosh-server` in WSL2 passes screening.</li></ol>**Cost:** SSH, SFTP and Mosh are on the free Starter plan; startup snippets, session logs and sync need Pro ($10/month, billed annually). | — | https://learn.microsoft.com/en-us/windows/wsl/wsl-config · https://termius.com/pricing | updated 2026-10-16 · undated, retrieved 2026-10-19 |
 
+## Deep-dive (T1 Termius only)
+
+Checked 2026-10-19 by deepdive-ios-terminal, against Termius iOS/iPadOS 8.0.3. Blink is screened out (N2), so only Termius is assessed. Termius is a client-layer component: it creates no sessions and runs no harness. It reaches sessions that tmux, or an orchestrator using tmux, keeps alive on the PC.
+
+### ALWAYS gates (component level)
+
+| ID | Verdict | Evidence (short quote or exact paraphrase) | Source URL | Source date |
+|----|---------|---------------------------------------------|------------|-------------|
+| A1 | PASS (7.4 generic terminal, with tmux; configuration-scoped) | **Provides:** the screen's evidence still holds. `tmux ls` lists sessions (i); attaching to a session and typing into it covers (ii), with Esc, Ctrl, arrow keys and Shift+Tab "for Claude Code and other AI tools"; `tmux new -A -s <n> -c <repo> claude\|codex` starts one (iii).<br>**Limits found in the deep-dive:**<ul><li>iOS "stop[s] background activity almost immediately, usually within 20 to 30 seconds", so the user re-attaches on return.</li><li>With location tracking on, "background connections are less likely to be interrupted".</li><li>No documented push notification: the only related change is the terminal-bell sound following system volume, in iOS 4.6.1.</li><li>The vendor names Claude Code, Gemini and OpenCode, never Codex. Codex-specific rendering under the 8.0.3 libghostty engine is unconfirmed (open question).</li></ul>**Needs from partners:**<ul><li>tmux, with a WSL2 keep-alive (`instanceIdleTimeout=-1`; see tmux.md);</li><li>an SSH server: Windows OpenSSH set to Automatic, or the WSL2 distro's sshd (7.20);</li><li>Tailscale.</li></ul> | https://docs.termius.com/help-center/faq/how-can-i-keep-termius-sessions-alive-in-the-background-on-ios-ipados · https://docs.termius.com/changelog/ios · https://docs.termius.com/terminal/mobile-terminal | undated, retrieved 2026-10-19 · 8.0.3 2026-10-15 |
+| A2 | N/A (layer) | Attached, Termius shows the native TUI, including tool calls as the TUI renders them. It is not a transcript store:<ul><li>session logs "can only be viewed on macOS, Windows, or Linux";</li><li>by default it keeps "one recent log per host, and each new session replaces it".</li></ul>A2 rests on the harnesses' JSONL plus `claude --resume`, `codex resume` or a viewer. Termius only adds visibility on the iPhone. | https://docs.termius.com/organize-and-connect-to-hosts/session-logs | undated, retrieved 2026-10-19 |
+| A3 / A4 | N/A (layer) | As in the screen: no harness, no Claude or ChatGPT credentials. (Privacy notes below.) | — | — |
+| A5 | PASS (configuration-scoped) | **Phone → PC files, live:**<ul><li>Termius SFTP browses remote folders on mobile ("Mobile lets you open multiple SFTP tabs"; refresh from the path bar).</li><li>Files open in a full-screen preview (iOS 7.3.0: "Changed the files preview style in SFTP to full screen").</li><li>"Press and hold the file, then choose an app to edit it".</li></ul>SFTP reads the host filesystem directly, with no sync step, so new and uncommitted files appear. Hidden files are off by default ("Termius doesn't show hidden files and folders by default"), and a "Show Hidden Files" action exists.<br>**`C:\` workspaces:** Windows OpenSSH serves SFTP: `ChrootDirectory` "is only supported with SFTP sessions". Termius fixed "an issue in SFTP that didn't allow selecting other drives on Windows" (7.3.1).<br>**WSL2 ext4 workspaces:** SFTP to the distro's own sshd (a given, 7.20), reached over Tailscale through mirrored networking (Windows 11 22H2+) or a portproxy (see tailwind.md, F6 rows). Browsing `\\wsl.localhost` through Windows OpenSSH's SFTP is undocumented (UNKNOWN), so don't rely on it.<br>**PC → phone direction:** all agent work runs on the PC, and files uploaded from the phone land in the PC workspace (F8). | https://docs.termius.com/organize-and-connect-to-hosts/managing-files-with-sftp · https://docs.termius.com/changelog/ios · https://learn.microsoft.com/en-us/windows-server/administration/openssh/openssh-server-configuration · tailwind.md | undated, retrieved 2026-10-19 · 7.3.0 2025-12-08; 7.3.1 2025-12-22 · ms.date 2025-08-05 |
+| A6 / A7 / A8 | N/A (layer) | Creates no sessions and stores no transcripts. It lets the user reach sessions that agents or orchestrators create in tmux. | — | — |
+
+### FAVOUR scores (component)
+
+| ID | Verdict | Points | Evidence | Source URL | Source date |
+|----|---------|--------|----------|------------|-------------|
+| F3 | PASS | 2 | App Store app from Termius Corporation. | https://apps.apple.com/us/app/termius-terminal-ssh-client/id549039908 | 2026-10-14 |
+| F4 | PASS | 2 | 6.0.0: "iPad: A new Desktop-like layout with tabs at the top". "multi-tab interface and split-view support". Hardware-keyboard keys work. The side panel "appears on the right side" on iPad. | https://docs.termius.com/changelog/ios · https://docs.termius.com/terminal/mobile-terminal | 2025-02-21 · undated |
+| F5 | PASS (with tmux) | 2 | Attaching to the TUI's tmux pane is the 7.10 F5 route. `claude --resume` and `codex resume` also run from the phone with the same history. | tmux.md (tmux.1 L1089–L1345) · https://code.claude.com/docs/en/cli-reference · https://developers.openai.com/codex/cli/reference | 2026-10-08 · undated |
+| F6 | PARTIAL | 1 | Termius local port forwarding can open a PC dev server, but only in the foreground: tmux and screen "do not help if the app goes to the background while port forwarding is active". Tailscale Serve is the sturdier F6 path. | https://docs.termius.com/help-center/faq/how-can-i-keep-termius-sessions-alive-in-the-background-on-ios-ipados | undated |
+| F7 | PASS | 2 | **PC file on phone:** SFTP full-screen preview, or press-and-hold to open it in another app (e.g. a code editor).<br>**Phone file on PC:** upload it, then it opens on the PC. | https://docs.termius.com/organize-and-connect-to-hosts/managing-files-with-sftp · https://docs.termius.com/changelog/ios | undated · 2025-12-08 |
+| F8 | PASS | 2 | **Phone → PC:** "Tap the Upload button"; "Drag a file from the Files app and drop it onto the Termius window with the active SFTP session"; 7.8.0 "Paste, drag and drop, use the paperclip button, or use the system share dialog to quickly upload a file to the host". Pasted files go "over SFTP to /tmp" with the path inserted into the terminal (screen).<br>**PC → phone:** "Download … to the Termius > Download folder on the device"; "the Transfers section is synced with the Termius > Downloads folder on the device"; tap a transfer "to open it in one of the apps". | https://docs.termius.com/organize-and-connect-to-hosts/managing-files-with-sftp · https://docs.termius.com/changelog/ios | undated · 7.8.0 2026-09-14 |
+| F1, F2, F9, F10 | N/A (layer) | 0 | No harness (F1). Closed source, so F2 does not apply. No session environments (F9). No vendor-desktop-app sessions (F10). | — | — |
+| **F1–F10** | | **11/20** | | | |
+| F11a | FAIL | 0 | Cannot spawn sessions; agents or orchestrators do that through tmux. | — | — |
+| F11b | FAIL | 0 | No parent linkage. `tmux ls` lists sessions flat. | — | — |
+| F11c | PARTIAL | 1 | A delegated session running as a TUI in tmux shows its tool calls exactly as a top-level session does when attached. Headless children (`codex exec`, `claude -p`) show nothing live. tmux scrollback defaults to 2,000 lines (tmux.md). | tmux.md | 2026-10-08 |
+| F11d | PASS (TUI-mode delegations) | 2 | Attach, type, Esc or Ctrl-C to interrupt, or take over in the native TUI. | https://docs.termius.com/terminal/mobile-terminal | undated |
+| F11e | PARTIAL | 1 | c and d work from iPhone and iPad; a and b do not exist in this component. | — | — |
+| **F11** | | **4/10** | | | |
+
+### Privacy and security (Termius primary docs, retrieved 2026-10-19, undated)
+
+**Session logs**
+- "Session logging is enabled by default for all vaults", and covers SSH, Telnet, serial and local terminals.
+- "Anything that appears in your terminal as plain text" is captured, except hidden password prompts.
+- "Session logs are protected by the same end-to-end encryption as the rest of your data".
+- iOS records and syncs them in the background; they "can only be viewed on macOS, Windows, or Linux".
+- Logging can be disabled per vault only (Settings → Logs), and "Disabling logging deletes all logs in the vault, including bookmarked ones".
+- New sessions aren't recorded on the Starter plan, and "Mosh sessions are not recorded".
+- Source: https://docs.termius.com/organize-and-connect-to-hosts/session-logs
+
+**Vault encryption**
+- Uses Libsodium 1.0.20: "X25519 key exchange, XSalsa20 stream cipher, and Poly1305 MAC", Argon2id password hashing, and modified SRP6a authentication.
+- "The encryption key and key pair are stored on devices" (iOS Keychain).
+- The encryption password is "never sent over the network"; "No one can read data in the Personal vault without the encryption password".
+- Source: https://docs.termius.com/security/encryption-overview
+
+**Sync and accounts**
+- Syncing needs an account and a subscription: "You can log out and use Termius locally without one".
+- The "Sync keys and identities" toggle keeps credentials "only kept locally". Biometric SSH keys "never leave your device".
+- Sources: https://docs.termius.com/help-center/faq/why-am-i-required-to-create-an-account.md · https://docs.termius.com/keychain/sync-of-keys-and-passwords.md
+
+**AI widget**
+- Selected terminal text "will be passed to the AI widget along with the prompt".
+- The provider, data flow and retention are undocumented (UNKNOWN). It can be hidden ("Hide the AI widget").
+- Source: https://docs.termius.com/help-center/faq/how-can-i-hide-the-ai-widget
+
+**Turn off as setup steps**
+1. Session logging for the vault that holds the PC host. Without it, terminal output, including agent output and any secrets printed, is recorded.
+2. The AI widget, and any Termius AI agent feature.
+3. Optionally key sync ("Sync keys and identities" off) or a device-bound biometric key.
+4. Do vendor logins (`claude /login`, `codex login`) on the PC rather than through Termius while logging is on.
+5. Location tracking: optional, trading location data for background resilience.
+
+### Usability limits
+- **Backgrounding.** iOS suspends Termius in about 20–30 s, so sessions drop and tmux keeps the agents running. On return the user reconnects and re-attaches. A Pro startup snippet can run `tmux new -A -s main` automatically on connect (screen).
+- **Reconnect.** The current docs have no iOS auto-reconnect statement. A 2023 vendor blog post describes auto-reconnect (lead only).
+- **Notifications.** None documented for an agent waiting on input, only the terminal-bell sound (iOS 4.6.1), so the user must check in. The unscreened lead Moshi advertises webhook push notifications for Claude Code and Codex.
+- **iPad.** Split View keeps Termius open beside another app, e.g. a browser on a Tailscale Serve URL.
+
+### Stack fit
+- **Minimal terminal stack:**
+  - Termius on the iPhone/iPad, over Tailscale, into one of:
+    - Windows OpenSSH set to Automatic, with `DefaultShell` = `wsl.exe` or running `wsl -d <distro>`;
+    - the WSL2 distro's sshd with mirrored networking.
+  - Then tmux (with a WSL2 keep-alive), running the unmodified `claude` and `codex` TUIs on their own logins.
+  - Files (A5, F7, F8) go through Termius SFTP to the same host; dev servers (F6) through Tailscale Serve.
+  - No component reads Claude or ChatGPT credentials. Termius session logging must be off.
+- **With CAO:** CAO runs each agent in its own tmux session, so Termius can list and attach to them, giving F11c/d/e for CAO's workers from the phone. Whether CAO uses the default tmux socket is an open question.
+- **With cmux-tui:** usable through Termius if it supports detach and re-attach from another terminal; otherwise run it inside tmux (see cmux.md).
+- **Conflicts:**
+  - Termius is not a VPN, so iOS's one-VPN limit doesn't clash with Tailscale.
+  - Prefer Tailscale Serve over Termius port forwarding, which dies in the background.
+  - Pro (about $10/month, billed annually) is needed for startup snippets, sync and session logs. Starter has SSH, SFTP and Mosh.
+
 ## Open questions
+- **Deep-dive: does Windows OpenSSH's SFTP expose `\\wsl.localhost\<distro>` paths?**
+  - Why it matters: if it does, WSL2 ext4 workspaces could be browsed without running sshd inside WSL2. Until settled, use the distro's sshd (7.20) plus mirrored networking or a portproxy.
+- **Deep-dive: which tmux socket and server do CAO and Gas City use** (default, or `-L`/`-S`)?
+  - Why it matters: it decides whether a plain `tmux ls` from Termius sees their sessions (F11c/d/e for workers).
+- **Deep-dive: the AI widget's provider, data flow and retention are undocumented.** Keep it hidden until Termius documents them.
+- **Deep-dive: where session logs are stored** (device and cloud). Docs say only that they are E2E-encrypted and synced. Logging should be off regardless.
 - **Blink N3: does an App Store release with no public source count as a "release" under 7.3(c)?**
   - This screen counts it, so N3 is PASS.
   - If not, N3 is FAIL and the outcome becomes `SCREEN FAIL at N3`. Blink is screened out either way.
