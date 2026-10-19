@@ -394,13 +394,16 @@ Each item gives: criterion · ambiguity · proposed reading (an operational test
 
 ## D. Additions (2026-10-19)
 
-The user added three candidates after the first shortlist: "Bernstein", "cmux" and "awe's CLI Agent Orchestrator". Same rules as section A: identity and scope only; facts that bear on gates are leads, not verdicts. Sources retrieved 2026-10-19 via WebFetch, plus read-only anonymous clones for Bernstein and CLI Agent Orchestrator.
+The user added these after the first shortlist: "Bernstein", "cmux", "awe's CLI Agent Orchestrator", and "wmux and tmux … (cmux for windows/WSL2)". Same rules as section A: identity and scope only; facts that bear on gates are leads, not verdicts. Sources retrieved 2026-10-19 via WebFetch, plus read-only anonymous clones for Bernstein, CLI Agent Orchestrator and the two wmux repos.
 
 | slug | user's name | canonical name | canonical URL(s) | GitHub repo (licence) | layer(s) | one-line description | conf. | alternatives considered → why rejected |
 |---|---|---|---|---|---|---|---|---|
 | bernstein | Bernstein | Bernstein ("the open-source governance layer for AI agents") | https://github.com/sipyourdrink-ltd/bernstein (github.com/chernistry/bernstein renders as this repo) · docs https://bernstein.readthedocs.io · PyPI `bernstein` (3.x) | sipyourdrink-ltd/bernstein (Apache-2.0; ~1.3k★, 184 forks displayed) | orchestrator, client/UI | Deterministic Python scheduler (no LLM in the coordination loop) that runs CLI coding agents in parallel, each in its own git worktree, behind lint/type/test gates. Records lineage and a replay journal, with an opt-in HMAC-chained audit log. Supports 50+ agents including Claude Code and Codex. Dashboards: `bernstein live` (TUI) and `bernstein gui serve` (browser). | high | No other agent product called Bernstein found (search, 2026-10-19). The chernistry and sipyourdrink-ltd owners are the same repo, not two products. |
 | cmux | cmux | cmux by Manaflow: "Open source Ghostty-based macOS terminal with vertical tabs and notifications for AI coding agents" | https://cmux.com (www.cmux.dev 301-redirects here) · https://github.com/manaflow-ai/cmux · https://cmux.com/agents/claude-code · https://cmux.com/agents/codex | manaflow-ai/cmux (GPL-3.0-or-later for the app; server parts `web/`, Cloudflare workers and relay services under BUSL-1.1; ~28.3k★, 2.5k forks displayed) | PC terminal/multiplexer (client/UI on the PC); orchestrator-lite (scriptable panes); client/UI (iOS companion, beta); runtime (cloud VMs, early access) | Native Swift/AppKit terminal built on libghostty. Workspaces and splits per task; notification rings driven by OSC 9/99/777 or agent hooks. A CLI and Unix-socket API let agents create workspaces, split panes, send keystrokes, read screen contents and drive a built-in browser. Claude Code teammates and subagents appear as native splits. `cmux ssh` and remote-tmux attach (beta). iOS companion "cmux BETA" on TestFlight pairs through the Mac's Mobile Connect window to attach to terminals. | high | **cmux.dev**: Manaflow's earlier "universal AI coding agent manager" (VS Code workspaces in cloud or local Docker); the domain now 301-redirects to cmux.com, so it is the same vendor's superseded product. **coder/cmux**: Coder's "Coding Agent Multiplexer" was renamed Mux, then Xum (the page now shows coder/xum, AGPL-3.0, ~2.1k★), and it runs "a custom agent loop", not Claude Code or Codex. No longer called cmux. **craigsc/cmux**: "tmux for Claude Code", a bash worktree manager, ~605★, Claude-only. Far less known. None is as plausible as manaflow-ai/cmux, so there is one row only. |
 | cli-agent-orchestrator | awe's CLI Agent Orchestrator | CLI Agent Orchestrator (CAO, "kay-oh") by AWS Labs | https://github.com/awslabs/cli-agent-orchestrator · docs https://awslabs.github.io/cli-agent-orchestrator/ · PyPI `cli-agent-orchestrator` (2.x) | awslabs/cli-agent-orchestrator (Apache-2.0; ~1.5k★, 297 forks displayed) | orchestrator, client/UI | "Multi-agent orchestration for AI coding CLIs — Claude Code, Kiro, Codex, and more, coordinated in isolated tmux sessions". A local `cao-server` launches each provider CLI as a full interactive process in its own tmux session. A supervisor agent delegates to worker agents over MCP: parallel, sequential or swarm, and across providers (e.g. a Kiro supervisor with a Claude Code worker). Also a web UI at `localhost:9889`, an HTTP API with PTY WebSocket streaming, scheduled flows and headless runs; humans can attach to any agent's tmux session. | high | "awe's" read as "AWS's": the owner is `awslabs` and the repo title is exactly "CLI Agent Orchestrator". ComposioHQ's agent orchestrator, named next to CAO in a third-party landscape article (not verified here), has a different vendor and name. Forks or mirrors of the repo are copies. No other product with this name was found, so there is one row only. |
+| wmux-a | wmux | wmux by openwong2kim ("The ADE for AI agents") | https://github.com/openwong2kim/wmux · winget `openwong2kim.wmux` · Chocolatey `wmux` | openwong2kim/wmux (MIT; ~431★, 73 forks displayed; HEAD `2fbe8afa77dfa530c93ecdaeb84e2ef6348fd5ff`, 2026-10-19) | PC terminal/multiplexer (client/UI on the PC); orchestrator-lite; client/UI (iOS app, browser view) | Desktop workspace multiplexer, native on Windows 10/11 via ConPTY with no WSL needed. Also macOS arm64; Linux builds experimental. Runs Claude Code, Codex, Gemini and other CLIs side by side in panes. Git-worktree fan-out, a "Fleet" attention view, browser panes, hunk-level review. A standalone daemon owns the terminals, so sessions survive quitting the app, and panes offer "Resume" after a crash or reboot. MCP tools for terminal, pane, channel, A2A and fan-out; token-authenticated socket and `wmux` CLI. iOS App Store app pairs with the desktop to answer agent prompts; `wmux web` serves panes to a browser, read-only and loopback-only by default. | med (tie with wmux-b) | See wmux-b. kevmtt/wmux → a fork of amirlehmam/wmux (0★, Claude-only "visibility layer"), so a copy. psmux → a different name (native-Windows tmux-protocol multiplexer; see the tmux row). |
+| wmux-b | wmux | wmux by amirlehmam ("The original Windows terminal multiplexer for AI agents") | https://github.com/amirlehmam/wmux · wiki https://github.com/amirlehmam/wmux/wiki | amirlehmam/wmux (MIT; ~421★, 87 forks displayed; HEAD `3d59aef0264e6febf3dd2af766ac64e95e1b3dd2`, 2026-10-18) | PC terminal/multiplexer (client/UI on the PC); orchestrator-lite (cmux-compatible socket API); client/UI (phone web console) | Electron + xterm.js terminal multiplexer on ConPTY: split panes, workspaces, browser panel, file explorer, agent sidebar. Its socket API is "wire-compatible with cmux", as a from-scratch reimplementation. Windows-native (zip, no installer); WSL2 Bash/Zsh integration, plus `wmux bridge --wsl` relay. Claude Code integrates through auto-configured hooks and a CDP proxy; Codex is read by screen detection, with session restore. Phone web console (new in 2.15) is off by default on 127.0.0.1:9790, with QR pairing; remote access via Tailscale or an SSH tunnel. | med (tie with wmux-a) | Equally plausible with wmux-a. Similar stars, both active this week, both Windows-native "cmux for Windows". This one matches the user's "cmux for windows" framing most literally (cmux socket compatibility); wmux-a has the App Store iOS app. Both rows go to screening. |
+| tmux | tmux | tmux (terminal multiplexer) | https://github.com/tmux/tmux · releases https://github.com/tmux/tmux/releases (latest **3.8**, 09 Sep, marked "Latest") · install wiki https://github.com/tmux/tmux/wiki/Installing (edited 2025-12-22) | tmux/tmux (ISC; ~49.9k★, 3.0k forks displayed) | PC terminal/multiplexer; runtime substrate for orchestrators | Persistent terminal sessions, windows and panes on Unix-like systems. The README says it "runs on OpenBSD, FreeBSD, NetBSD, Linux, macOS and Solaris"; there is no native Windows build. Detached sessions keep running native `claude` and `codex` TUIs while no client is attached; any SSH client can reattach. | high | psmux → a native-Windows tmux-protocol reimplementation in Rust, named in a Claude Code issue thread (github.com/anthropics/claude-code/issues/34150; lead only, not verified); not what the user wrote. Zellij, byobu, WezTerm mux → different products. |
 
 ### D.1 cmux: where it could fit in a combined stack
 
@@ -451,10 +454,53 @@ The user added three candidates after the first shortlist: "Bernstein", "cmux" a
   - **Client/UI:** the web UI and tmux attach give native-TUI access, which bears on F5. The iPhone could reach the web UI over Tailscale only if it is exposed beyond localhost; no iOS app is mentioned (A1 lead).
   - **Natural pairings:** Tailscale, an iOS terminal for tmux attach, agentsview for transcript audit, and the claude/codex CLIs in WSL2.
 
-### D.4 Repos for these additions
+### D.4 wmux and tmux: the PC-side multiplexer layer (the user's "cmux for Windows/WSL2")
+
+- **Where they sit.** All three fill the layer cmux fills on a Mac: the PC-side terminal or multiplexer that hosts the native `claude` and `codex` TUIs, which bears on F5. They differ on what else they bring.
+- **wmux-a (openwong2kim).**
+  - **Layers:**
+    - PC terminal/multiplexer, Windows-native;
+    - orchestrator-lite: MCP pane, terminal and fan-out tools; agents can open and drive sibling panes (A8, F11a/b/d via native TUIs);
+    - client/UI: iOS App Store app (A1/F3 lead) and `wmux web` (loopback and read-only by default);
+    - runtime: a daemon that keeps sessions alive across reboots (fits an always-on PC).
+  - **Pairs with:** the claude and codex CLIs, Tailscale (remote reachability and relay), agentsview (A2/A6b audit).
+  - **Leads:**
+    - Native on Windows; macOS arm64; Linux "experimental".
+    - The repo has WSL session-recovery docs, but whether panes can run agents *inside* WSL2 needs screening.
+    - ~431★ displayed, so N1 needs checking.
+    - Commits since 2026-07-19 are dominated by one author (1,382 + 119 of 1,735), so N2 needs checking.
+- **wmux-b (amirlehmam).**
+  - **Layers:**
+    - PC terminal/multiplexer, Windows-native, with WSL2 shell integration and `wmux bridge --wsl`;
+    - orchestrator-lite: the cmux-compatible socket API, so cmux-style scripts and agent tooling can drive panes;
+    - client/UI: phone web console, off by default, QR pairing, reached over Tailscale or an SSH tunnel (A1 lead; webapp only, so F3 FAIL).
+  - **Pairs with:** Tailscale (it names Tailscale for phone access), the claude and codex CLIs, and agentsview.
+  - **Leads:**
+    - ~421★ displayed (N1).
+    - Since 2026-07-19, one author made 347 of 537 commits, with several others at about 5–7% each (N2 data needed).
+    - Version labels are inconsistent: a v0.7.10 download link vs README features up to "2.15".
+- **tmux.**
+  - **Layers:**
+    - PC multiplexer inside WSL2;
+    - runtime substrate already used by orchestrators in this study: Gas City's default "tmux" runtime provider (section A.1) and CAO's isolated tmux sessions (D.3).
+  - Claude Code's agent-teams split-pane mode also relies on tmux. A Claude Code issue reports Windows users "locked out" of teammate mode because "TmuxBackend requires Linux/macOS tmux" (anthropics/claude-code#34150; lead only). WSL2 tmux avoids that.
+  - **WSL2 install route:** the distro package, `apt install tmux` on Debian/Ubuntu, per the tmux wiki "Installing" page (edited 2025-12-22). The wiki warns prebuilt packages "are often out of date", and the distro version may lag upstream 3.8. Building from source is the alternative.
+  - **iPhone access:** there is **no first-party or companion iOS client**. The tmux README and Installing wiki mention none, and control-mode clients such as iTerm2 are macOS-only. iPhone access therefore needs a separate iOS SSH/mosh terminal app (e.g. Blink Shell or Termius; not screened), or a web terminal, reaching WSL2 over Tailscale (Tailscale SSH optional).
+  - Under brief 7.4/B.6, such a terminal component must itself pass N1–N3 for A1 to count. F3 and F4 then depend on that app.
+  - **Pairs with:** an iOS terminal app, Tailscale, mosh for roaming, Gas City or CAO as orchestrators, agentsview for audit, and the claude and codex CLIs in WSL2.
+  - **Leads:**
+    - Platform: Linux, macOS, BSD and Solaris only; Windows via WSL2 only.
+    - Latest release 3.8 (09 Sep, "Latest"), so N3 looks fine.
+    - ISC licence; ~49.9k★.
+    - N2 is to be checked: upstream is maintained by a small core team.
+
+### D.5 Repos for these additions
 
 ```
 sipyourdrink-ltd/bernstein
 manaflow-ai/cmux
 awslabs/cli-agent-orchestrator
+openwong2kim/wmux
+amirlehmam/wmux
+tmux/tmux
 ```
