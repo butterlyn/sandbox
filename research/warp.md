@@ -10,6 +10,12 @@
 ## Summary
 - Screen W1 (Warp client running the `claude` and `codex` CLIs, plus Remote Control): **SCREEN HOLD (A1)**
 - Screen W2 (Oz / Automation Platform cloud harnesses for Claude Code and Codex): **SCREEN FAIL at A3**
+- Deep-dive (W1 only, by deepdive-warp, 2026-10-19):
+  - ALWAYS gates: A2, A3 and A4 PASS; A6, A7 and A8 PASS (workaround); A1 and A5 PARTIAL.
+  - FAVOUR: F1–F10 = 9/20 with Windows-native shells (7/20 with WSL2 shells, where F10 drops to 0); F11a–e = 1/10.
+  - Role: an optional PC terminal for the native TUIs. It adds no ALWAYS-gate coverage that another component doesn't already supply.
+  - The shell-share workaround for A1 does not hold up: shares expire about a week after creation, and renewal is only wired into the Oz driver, so the user must re-share from the PC every week.
+- Precision (2026-10-19, deepdive-warp): the Remote Control auto-stop applies to shares started from the CLI-agent toolbar, which use scrollback type None. A plain "Share current session" from the command palette is not auto-stopped when an agent exits.
 - Warp clears N1–N3 on its client repo:
   - 65.5k stars;
   - 362 human commits to `master` in the last 90 days;
