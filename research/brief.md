@@ -408,7 +408,13 @@ Grade every harness path a component uses.
 Policy pages change. For A3 evidence, cite the most recent dated primary page and quote it.
 
 ### 7.15 Candidates added from discovery
-_Pending discover-candidates._
+Proposals and evidence are in `research/discovery.md`.
+
+| slug | canonical product and scope | where to start |
+|---|---|---|
+| happy | Happy (slopus): the `happy` CLI wrapper that launches the unmodified `claude` and `codex` on the PC, the Happy iOS/iPadOS app, `happy-agent` (agent-side session control), and the relay server (hosted or self-hosted). Out of scope, and the stack must be able to avoid them: Happy Desktop's own "Happy Harness" and `happy connect` (uploads vendor keys). | github.com/slopus/happy |
+| chatgpt-desktop-codex | OpenAI's Codex surfaces on Windows: the Codex app / ChatGPT desktop app's Codex on Windows (native, or with the agent in WSL2), ChatGPT iOS/iPadOS remote connections to that host, and Codex cloud tasks. The Codex counterpart of claude-desktop. | learn.chatgpt.com/docs/remote-connections, developers.openai.com/codex |
+| code-server | code-server (Coder) installed in WSL2 and opened in iPhone/iPad Safari: file explorer and editor, integrated terminals running the native `claude`/`codex` TUIs, port proxy, and the Claude Code and Codex extensions via Open VSX | github.com/coder/code-server |
 
 ## 8. Working rules for every subagent
 
