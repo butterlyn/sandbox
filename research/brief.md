@@ -1,7 +1,7 @@
 # Research brief: agent orchestration workflow shortlist
 
 Prepared 2026-10-18 by the orchestrator (main session) on branch `agent-orchestration-shortlist-2026`.
-Every subagent reads this whole file before starting. **Today's date is 2026-10-18.**
+Every subagent reads this whole file before starting. Research started on 2026-10-18; **use the actual current date (2026-10-19 or later) in every "checked" and "accessed" field.**
 
 Sections 1–3 are the user's words, copied verbatim (§2–3 with bullet and tab whitespace normalised; the words are unchanged). Sections 4–7 are the orchestrator's bookkeeping; where they and §1–3 seem to differ, §1–3 govern.
 
@@ -167,7 +167,7 @@ One file per candidate: `research/<slug>.md` (slugs are assigned in `research/re
 - **Verdict** is exactly one of PASS, PARTIAL, FAIL, UNKNOWN. UNKNOWN is not a PASS.
 - **N/A** is allowed only in component files, and only (a) for the GitHub-based gates N1 and F2 on a closed-source component, or (b) when the component's layer cannot own the criterion at all (say what the component contributes instead). Stack-level verdicts never use N/A.
 - **Source URL** must be a primary source (repo file or commit, docs page, changelog, release, issue/PR, App Store listing). A blog post, listicle, video or search snippet is a lead only: open the primary source it points to, or mark the criterion UNKNOWN.
-- **Source date** is the date of that source: release date, commit date, doc "last updated" date, or issue/PR date. If the page shows no date, write `undated (accessed 2026-10-18)`.
+- **Source date** is the date of that source: release date, commit date, doc "last updated" date, or issue/PR date. If the page shows no date, write `undated (accessed <the date you accessed it>)`.
 - Cite the latest release where possible. If the evidence comes from an older release or from unreleased `main`, say so.
 
 ### 5.3 Screen section (Stage 2)
@@ -237,4 +237,61 @@ File: research/<slug>.md
 
 ## 7. Adopted readings
 
-Pending Stage 1. The orchestrator fills this in from `research/resolve.md` and the user's answers before Stage 2 starts.
+Filled in on 2026-10-19 from `research/resolve.md` (readings R1–R11f), `research/discovery.md`, and the user's answers to three questions on 2026-10-19 (marked **[USER]**, quoted as the user chose them). Where this section differs from resolve.md, this section wins.
+
+### 7.1 Candidate roster (30 slugs)
+
+Identity details and sources: slugs 1–25 in `research/resolve.md` §1; slugs 26–27 in `research/discovery.md` §1. Facts in those files are leads only, so re-verify anything you cite.
+
+| # | Slug | Project | Repo | Layer(s) | Notes |
+|---|---|---|---|---|---|
+| 1 | `t3-code` | T3 Code running Orchestrator V2 ("T3 Code V2") | pingdotgg/t3code | orchestrator, client-UI | |
+| 2 | `superset` | Superset (superset.sh) | superset-sh/superset | orchestrator, client-UI | |
+| 3 | `orca` | Orca by Stably AI | stablyai/orca | orchestrator, client-UI | |
+| 4 | `paseo` | Paseo | getpaseo/paseo | orchestrator, client-UI | |
+| 5 | `maestro` | Maestro (RunMaestro) | RunMaestro/Maestro | orchestrator, client-UI | |
+| 6 | `scion` | Scion (Google Cloud Platform) | GoogleCloudPlatform/scion | orchestrator, runtime-sandbox, client-UI | |
+| 7 | `archon` | Archon (Cole Medin) | coleam00/Archon | orchestrator, client-UI | |
+| 8 | `docker-sandboxes` | Docker Sandboxes (`sbx`) | closed (docker/sbx-releases holds releases and issues only) | runtime-sandbox | |
+| 9 | `claude-desktop` | Anthropic's Claude Code surfaces: Claude Desktop Code tab, Claude iOS/iPadOS app (cloud sessions, Remote Control, Dispatch), claude.ai/code, Claude Code CLI including `claude remote-control` server mode | closed | client-UI, orchestrator, runtime | Also check whether Claude Code has a feature called "Agent view", a possible reading of "AgentView" |
+| 10 | `codex-app` | OpenAI's Codex surfaces: Codex in the ChatGPT desktop app (Windows, with a WSL agent option), Codex Remote in ChatGPT for iOS, Codex CLI, Codex cloud | openai/codex (CLI); apps closed | client-UI, orchestrator, runtime | Added by Resolve because the user's FAVOUR rows name "Codex Desktop". Discovery's `codex-remote` is merged into this slug |
+| 11 | `intent` | Intent (intentapp.dev, formerly Augment Code's Intent) | intent-hq/intent (public mirror) | orchestrator, client-UI | |
+| 12 | `agor` | Agor (Preset) | preset-io/agor | orchestrator, client-UI | |
+| 13 | `parallel-code` | Parallel Code | johannesjo/parallel-code | orchestrator, client-UI | |
+| 14 | `gas-city` | Gas City | gastownhall/gascity | orchestrator | |
+| 15 | `agent-swarm` | Agent Swarm (Desplega Labs) | desplega-ai/agent-swarm | orchestrator, runtime-sandbox, client-UI | Identity is medium confidence |
+| 16 | `conductor` | Conductor (Melty Labs) | closed | orchestrator, client-UI | |
+| 17 | `warp` | Warp terminal plus Oz cloud agents | warpdotdev/warp (client) | client-UI, orchestrator, runtime | |
+| 18 | `claude-github-app` | Claude GitHub App plus Claude Code GitHub Actions | anthropics/claude-code-action | orchestrator, runtime | |
+| 19 | `codex-github-app` | ChatGPT Codex Connector GitHub App | closed | orchestrator, runtime | |
+| 20 | `github-repos-issues` | GitHub repos, issues and PRs, plus GitHub Mobile | closed platform | sync | |
+| 21 | `vibe-kanban` | Vibe Kanban | BloopAI/vibe-kanban | orchestrator, client-UI | Sunset notice; see N3 below |
+| 22 | `agentsview` | agentsview, the main reading of "AgentView" | kenn-io/agentsview | client-UI (session viewer) | |
+| 23 | `agent-view` | agent-view, the alternate reading of "AgentView" | Frayo44/agent-view | orchestrator (tmux) | Screened because the identity is medium confidence |
+| 24 | `tailscale` | Tailscale, the reading of "Tailwind" | tailscale/tailscale | networking | |
+| 25 | `obsidian-sync` | Obsidian Sync | closed | sync | |
+| 26 | `happy` | Happy: the original `happy` CLI plus the iOS/iPadOS/web app (not Happy Desktop) | slopus/happy | client-UI, orchestrator, networking | From discovery |
+| 27 | `cloudcli` | CloudCLI (formerly Claude Code UI) | siteboon/claudecodeui | client-UI, orchestrator | From discovery |
+| 28 | `ios-ssh-client` | Generic iOS/iPadOS SSH terminal: Termius first; alternates Prompt 3 (Panic) and Blink Shell | various | client-UI (generic) | Added because the user ruled that generic iOS apps count for A1 |
+| 29 | `ios-remote-desktop` | Generic iOS/iPadOS remote desktop: Microsoft Windows App (RDP) first; alternate Chrome Remote Desktop | various | client-UI (generic) | Added for the same reason |
+| 30 | `tmux` | tmux, which keeps terminal sessions alive between SSH connections; alternate Zellij | tmux/tmux | client-UI support | Added for the same reason |
+
+### 7.2 Readings
+
+| ID | Adopted reading |
+|---|---|
+| A1 **[USER]** | The user chose: "Generic iOS apps count too — Any iOS app with interactive control passes: SSH + tmux (Blink/Termius), remote desktop, chat bots. CLI/TUI-only tools (Gas City, Agent View, plain claude/codex in tmux) pass on their own." So A1 is PASS when the user can start, monitor and message the platform's sessions from an iPhone, through any of: the component's own webapp or iOS app; an SSH terminal into its CLI/TUI; remote desktop into its GUI on the PC; or a chat-app bot adapter it ships (Slack, Telegram, Discord…). Reaching any of these over Tailscale or a VPN counts. Record which path applies. PARTIAL = read-only monitoring only. FAIL = no interactive path from an iPhone at all. A generic iOS app or tmux used this way is itself a stack component and must pass the NEVER gates (slugs 28–30). F3, F4 and F5 still score native iOS apps, iPad layouts and native-TUI access separately. |
+| A3 **[USER]** | The user chose: "Fails the gate — Only the official claude binary under its own login passes (interactive, or headless `claude -p`). SDK-driven Claude on your subscription is a terms risk: PARTIAL, which can't clear an ALWAYS gate." **Claude half:** PASS = the platform launches the official `claude` binary (TUI, or headless `claude -p` including stream-json), and the binary signs in through Anthropic's own flow on the user's own plan: its stored login, or a `claude setup-token` token the user makes for their own use. The platform never offers its own Claude login and never collects, stores, copies or proxies the credential. PARTIAL = Claude driven through the Claude Agent SDK on the subscription (`@anthropic-ai/claude-agent-sdk`, Python `claude-agent-sdk`, including with `pathToClaudeCodeExecutable`), or the platform itself copies or injects the user's Claude credential into sandboxes. FAIL = API key only, the platform's own Claude login, or tokens relayed through vendor servers. **Codex half** (the user's answer didn't change it): PASS = ChatGPT-plan sign-in through Codex's own flow or OpenAI's "Sign in with ChatGPT" flow, including via `codex exec`, `codex app-server`, `codex mcp-server` or the official Codex SDK. Copying `~/.codex/auth.json` to a headless host the user controls follows OpenAI's documented path. FAIL = API key only. **Component verdict:** PASS if both halves pass; PARTIAL if one half passes and the other is PARTIAL, FAIL or absent; FAIL if neither half passes. |
+| A4 | Resolve R5. PASS = Anthropic's own Claude Code agent loop (the official binary; the Agent SDK also counts for A4, though A3 treats it as above) and OpenAI's own Codex loop (binary, app-server, Codex SDK, or OpenAI-hosted). A different agent loop calling the same models (OpenCode, Pi, Warp Agent, Auggie, Happy Agent…) = FAIL for that harness. Combine the two halves into a component verdict as for A3. |
+| N3 **[USER]** | The user chose: "Deprecated unless proven — Fails unless the official repo names active community maintainers and has shipped releases since the notice. Also: no release and no human commit in 90 days = abandoned." FAIL = archived or end-of-life; or an official deprecated, sunsetting or superseded notice, unless the official repo names active community maintainers and has shipped releases since that notice; or no release and no human default-branch commit in the 90 days before the check. PARTIAL = active, but part of the product is retired or the vendor steers users to a successor. A rewrite by the same maintainers (e.g., T3 Code Orchestrator V2) isn't deprecation, so evaluate the current version. |
+| N2 | Resolve R3. **Public repos:** use the last 180 days of default-branch history, counting human authors only (exclude bots; AI co-author trailers aren't maintainers). PASS = ≥2 humans each authoring ≥10% of non-bot commits, or ≥2 humans merging PRs in the window. PARTIAL = one human writes ≥75% but another active human has merge rights, or a funded company team stands behind it. FAIL = one human writes ≥90% of non-bot commits and essentially all merges, with no other documented maintainer. **Closed-source products:** judge the vendor. PASS = a company with a visible team; FAIL = a solo developer. |
+| N1, F2 | Resolve R10. These are the only GitHub-based gates. They apply to components whose source is public on GitHub under an OSI or source-available licence; a releases-only or issues-only repo counts as closed source (N/A). Use the canonical repo's star count. |
+| W | Resolve R8. PASS = a native Windows build; or a vendor Linux build that runs in WSL2 (CLI or daemon headless, or a GUI under WSLg, per the user's CONSIDER line; note "experimental" builds); or a cloud-hosted component usable from the PC. PARTIAL = Linux support only from source, or a known WSL problem. FAIL = macOS- or iOS-only and not cloud-hosted. A generic iOS client (slugs 28–29) passes W if it can reach the PC, Windows or WSL2; note edition limits (e.g., hosting RDP needs Windows Pro). |
+| Stage 2 hard fails | Resolve R9, adjusted for the A1 answer. N1, N2 and N3 hard-fail any component. W hard-fails a component that must run on the PC and has neither a Windows build nor a WSL2-usable one. A3/A4 hard-fail a component that launches agents only if neither half passes. A1 hard-fails only a component with no interactive iPhone path at all (own app, SSH, remote desktop or chat adapter). For networking, sync and generic-client components, A3/A4 are N/A; say what they contribute instead. For runtime/sandbox components, A3/A4 apply to the agents inside the sandbox, and A1 is N/A if it has no UI of its own. |
+| A5, F6, F7, F8 | Resolve R1. "Cross-mode" means between M1, the iPhone/iPad, and M2, the Windows PC including WSL2. A5 PASS = from M1 the user can browse folders and read files of the agent workspaces (not just what the agent pastes into chat), and files made on M1 reach somewhere M2 sees. PARTIAL = one direction only, diffs or snippets only, or only through GitHub pushes. F6 = M1 opens a dev server an agent started on M2. F7 = open a specific file from the other mode. F8 = move files both ways. |
+| A6b, A8 | Resolve R6. Native transcripts: Claude writes `~/.claude/projects/<project>/<session>.jsonl`, with subagents under `<session>/subagents/` and a default retention (`cleanupPeriodDays`) of 30 days. Codex writes under `CODEX_HOME`; confirm the path from source. A6b PASS = the delegated session's native transcript, with tool calls, ends up somewhere that outlives the sandbox or worktree and can be found later by path or ID. PARTIAL = only after a manual mount, volume or retention change the platform doesn't document. FAIL = it lives only inside an ephemeral sandbox, or only the platform's own summary survives. A8 PASS = an agent can create, monitor and resume a session in the other harness in both directions (Claude→Codex and Codex→Claude); one direction = PARTIAL. |
+| A7 | Resolve R7. "Separate sandbox" means across an isolation boundary: a container or microVM, another host, the Windows↔WSL2 boundary, or (weakest) another git worktree. PASS = a documented way to pass files or folders both ways across that boundary. PARTIAL = only with manual push/pull steps. FAIL = prompt text only. |
+| A2 | Resolve R11a–b. A2 covers sessions the platform launches (through its UI, API, CLI or MCP). The trail must be visible on at least one surface the user works from, showing each tool call's name, input and result or status, per session. Record separately whether it's visible on the iPhone. Sessions an agent starts as a plain subprocess are covered by A6b and F11c. |
+| F1 | Resolve R11c. "Its own login" means the binary's own login; the platform never reads, copies or proxies tokens. |
+| Other | Cloud execution is allowed (R11d). Paid tiers are allowed; record the cost (R11e). "Github Apps of Claude and codex" means the vendors' own GitHub apps (R11f). |
+| Modes within a stack | A component with a non-compliant mode (e.g., SDK-driven Claude) can sit in a passing stack only if the stack never uses that mode, and Stage 3 confirms the compliant mode works for that component's role, including when it's driven from the iPhone. The stack must name the mode it uses. |
