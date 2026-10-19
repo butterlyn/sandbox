@@ -14,6 +14,21 @@
 - Screen: HOLD (A1, A3, A4).
   - The hold is structural. This component runs only Codex, and 7.4 and 7.6 assign Claude Code to a partner component (e.g. claude-desktop).
   - Every Codex-side check passes with the Windows-native agent. The exception is the WSL2 agent mode (A1, below).
+- **Deep-dive (2026-10-19, deepdive-chatgpt-desktop-codex):**
+  - **Component-level ALWAYS gates,** for the recommended Windows-native topology (T-W, below):
+    - A2 PASS for host threads. Codex cloud tasks are UNKNOWN.
+    - A5 PASS for folders saved as projects on the host, through the iOS workspace file browser.
+    - A6 PASS (workaround), both directions, with a Windows-native `claude` partner.
+    - A7 PASS (workaround).
+    - A8 PASS (workaround), both directions.
+    - A1, A3 and A4 stay PARTIAL. The component runs only Codex, and the 7.16 clarifications change nothing here.
+  - **FAVOUR:** F1–F10 = 11/20; F11a–e = 5/10.
+  - **Fact that most affects composition:**
+    - The Windows app and the native Windows Codex CLI share `%USERPROFILE%\.codex`, covering config, cached auth and session history.
+    - OpenAI staff say CLI sessions appear in the app once their original-cwd project is added.
+    - So a Windows-native topology keeps Claude-launched `codex exec` runs in the same login and store that the app and the phone use. That means repos on `C:\` and both CLIs installed natively.
+    - WSL2 breaks this unless `CODEX_HOME` points at the Windows home, and the WSL agent's remote control is unreliable.
+    - Still UNKNOWN: whether the app lists `exec`-source threads. The app-server's default thread list covers interactive sources only.
 - **Maintenance (N1–N3).** OpenAI ships this weekly, and N1 does not apply (closed source).
   - Desktop app 26.1007 (2026-10-08) and a Store update on 2026-10-17. ChatGPT iOS 1.2026.279 (2026-10-16).
   - "Codex app" merged into the ChatGPT desktop app on 2026-07-09. It is the same Store package, renamed, not deprecated.
