@@ -444,6 +444,21 @@ Two screens graded the same facts differently, so these rules replace the ambigu
   - Appending instructions (Claude's preset plus an append, or Codex developer instructions or AGENTS.md) keeps PASS.
   - If the replacement can be switched off in a supported configuration, 7.16c applies.
 
+### 7.17 Stack-level scoring (Stage 4)
+- **ALWAYS gates.** A named component must clear each gate with PASS, or PASS (workaround) where the gate allows it, under the stack's stated configuration.
+  - A1, A3 and A4 must hold for both harnesses; different components may cover each.
+  - A2 must hold for every kind of platform-launched session in the stack.
+  - A6 and A8 must hold in both directions (7.8).
+- **NEVER gates.** Every core component and every optional add-on passes N1–N3 (7.3).
+- **FAVOUR stack scores:**
+  - **F1:** the lowest score among the stack's session-launching components for the paths the stack uses. One credential-touching component lowers the whole stack.
+  - **F2:** the lowest score among the stack's core open-source components. If the stack has none, F2 is 0 and marked N/A.
+  - **F3–F10 and F11a–F11e:** the best single component's score; capabilities do not add.
+  - Report F1–F10 (out of 20) and F11 (out of 10) separately, naming the component behind each item.
+- **Optional add-ons** are listed separately with what they add. They do not change the stack's gates or scores unless they are part of the core configuration.
+- **Configuration.** Every condition the stack relies on (7.16c settings, environment variables that must stay unset, `cleanupPeriodDays`, file placement, auth settings) is a numbered setup step.
+- **Strict alternatives.** For each stack, state which verdicts change under each 7.16 strict alternative.
+
 ### 7.15 Candidates added from discovery
 Proposals and evidence are in `research/discovery.md`.
 
