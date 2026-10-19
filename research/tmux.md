@@ -9,6 +9,12 @@
 
 ## Summary
 - Screen: PASS
+- Deep-dive (2026-10-19, deepdive-tmux):
+  - **Gate contributions:** A1 PASS together with Termius under 7.4, with the WSL keep-alive as a setup step. A2 PASS through the vendor TUIs. A6, A7 and A8 PASS (workaround) in both directions. A3, A4 and A5 are N/A (layer).
+  - **FAVOUR:** F1–F10 = 6/20 (F1, F2 and F5); F11 = 9/10.
+  - **Caveats:**
+    - Codex's default sandbox denies `connect()`, so Codex→Claude through tmux needs an approval or an allow rule.
+    - Distro lifetime rests on `instanceIdleTimeout=-1`. That setting is documented, but not tested with a detached tmux server.
 - tmux clears N3, N1, N2 and C1. A1, A3 and A4 are `N/A (layer)`: tmux starts no agents of its own, touches no credentials, and runs unmodified whatever command it is given.
 - **N2 passes on the rule's wording, narrowly.**
   - Nicholas Marriott wrote 77.8% of non-bot commits in the window. He tagged all six releases (3.6b to 3.8) and merged all 16 PRs that reached `master`.
@@ -53,6 +59,95 @@ These are not gates. Indicative readings are to be re-checked at Stage 4.
 | A2 / A6b | tmux keeps only an in-memory pane history, `history-limit`, which defaults to 2000 lines (options-table.c L848–L853). It is lost when the server exits, so tmux is not a transcript store. | Contributes nothing to A2 or A6b. The harnesses' own JSONL plus `claude --resume` / `codex resume` or a viewer must cover them | https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/options-table.c#L848-L853 | 2026-10-08 |
 | Versions | Ubuntu 24.04 LTS ships 3.4, 26.04 LTS ships 3.6a, and Debian 13 ships 3.5a (3.6b in backports). Upstream is 3.8. CAO needs tmux 3.3+ (resolve.md D.3, lead). | Every LTS package meets CAO's floor. Build from source to get 3.8 | (C1 row) | (C1 row) |
 
+## Deep-dive
+Checked 2026-10-19 by deepdive-tmux against tmux 3.8 (`7f2a35a`). tmux is a layer: it runs whatever command it is given and has no agent or file features of its own. The verdicts below are its contributions to a stack. The N2 ruling is taken from brief 7.20.
+
+### ALWAYS gates (contributions)
+| ID | Verdict | Evidence (short quote or exact paraphrase) | Source URL | Source date |
+|----|---------|---------------------------------------------|------------|-------------|
+| A1 | PASS (7.4 generic terminal, together with Termius; config: WSL keep-alive) | tmux supplies 7.4's persistence condition and the (i)–(iii) primitives. Termius supplies the screened iOS app (ios-terminal.md, T1 A1 PASS).<br>**(i) List and read:** `list-sessions` "List all sessions managed by the server"; `attach` shows the live TUI.<br>**(ii) Message and approve:** type into the attached TUI.<br>**(iii) Start:** `new-session -A -d -s <name> -c <repo> claude` (or `codex`).<br>**Condition:** persistence holds only while the distro runs. `.wslconfig` `instanceIdleTimeout=-1` ("Set to -1 to disable auto shutdown") is the documented setup step (see the keep-alive recipe).<br>**Caveats:** keep-alive is untested with only a detached tmux server (WSL#9968). Codex in Termius is also untested (ios-terminal.md Open questions). | https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/tmux.1#L1282-L1291 · https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/tmux.1#L1322-L1345 · https://learn.microsoft.com/en-us/windows/wsl/wsl-config · https://github.com/microsoft/WSL/issues/9968 | 2026-10-08 · ms.date 2026-10-16 · open, last comment 2026-07-04 |
+| A2 | PASS (through the vendor TUIs; tmux adds visibility, not storage) | Sessions tmux starts are the unmodified TUIs.<br>**Claude:** `Ctrl+O` "Toggle transcript viewer": "Shows detailed tool usage and execution".<br>**Codex:** "inspect commands and diffs as they appear".<br>**After the run:** `claude --resume` and `codex resume` ("Return to a saved chat") read the native transcripts.<br>tmux's own scrollback is in memory only (`history-limit`, default 2000 lines), so it is not the audit trail. agentsview can serve as an optional viewer (agentview-b.md). | https://code.claude.com/docs/en/interactive-mode · https://learn.chatgpt.com/docs/codex/cli · https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/options-table.c#L848-L853 | undated, retrieved 2026-10-19 · 2026-10-08 |
+| A3 | N/A (layer) | tmux makes no model calls and reads no credentials.<br>**Hygiene:** "When the server is started, tmux copies the environment into the global environment … The result is the initial environment passed to the new process." The default `update-environment` list (DISPLAY, SSH_AUTH_SOCK, …) contains no API-key variables. But a key exported when the server starts reaches every pane.<br>**Setup:** start the server without `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` or `CODEX_API_KEY`, or remove them with `set-environment -g -u <VAR>` ("The -u flag unsets a variable"). | https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/tmux.1#L7861-L7870 · https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/options-table.c#L1210-L1218 · https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/tmux.1#L7894-L7912 | 2026-10-08 |
+| A4 | N/A (layer) | Runs the given command unmodified: `new-session … [shell-command]`, "the name of and shell command to execute in the initial window". | https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/tmux.1#L1322-L1345 | 2026-10-08 |
+| A5 | N/A (layer) | tmux has no file browser. A5 in a tmux stack comes from another component (see Stack fit). | — | — |
+| A6 | PASS (workaround), both directions | **A6a:** `tmux new-session -d -s <child> -c <dir> codex` (or `claude`) starts the unmodified interactive TUI on its own stored login, i.e. the native harness on the subscription.<br>**A6b:** the transcripts are the harnesses' own, on the WSL2 disk, and outlive any tmux session:<ul><li>Claude JSONL under `~/.claude/projects`; raise `cleanupPeriodDays`.</li><li>Codex rollouts under `$CODEX_HOME/sessions`, never age-deleted.</li><li>Retrieve with `claude --resume` / `codex resume`.</li></ul>**Codex→Claude caveat:**<ul><li>With network access off, Codex's Linux sandbox installs seccomp "Restricted" mode, which denies `connect` outright. A sandboxed `tmux` client therefore cannot reach the tmux server's socket.</li><li>The call needs an approval to run outside the sandbox, or a Codex rule with `decision = "allow"` ("Run the command outside the sandbox without prompting"; "Rules are experimental and may change").</li><li>Untested. The `claude -p` route has the same approval need.</li></ul> | https://github.com/openai/codex/blob/1b89beea82ae60e0dbeacb38f1ad2eae9dfed377/codex-rs/linux-sandbox/src/seccomp.rs#L117-L128 · https://github.com/openai/codex/blob/1b89beea82ae60e0dbeacb38f1ad2eae9dfed377/codex-rs/linux-sandbox/src/seccomp.rs#L204-L233 · https://learn.chatgpt.com/docs/agent-configuration/rules · https://code.claude.com/docs/en/claude-directory · https://github.com/openai/codex/blob/89461ea6833832b0551ce24ee32205824d5c108d/codex-rs/rollout/src/lib.rs#L86-L95 | 2026-10-19 · undated · undated · 2026-10-19 |
+| A7 | PASS (workaround); sandbox clause not exercised | Every tmux session shares the WSL2 filesystem. `-c <start-directory>` puts the child in the same repo or worktree, and files and paths carry the hand-over. tmux is not a sandbox, so the separate-sandbox clause does not arise. | https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/tmux.1#L1322-L1345 | 2026-10-08 |
+| A8 | PASS (workaround), both directions | **Create:** `tmux new-session -d -s <child> -c <dir> codex\|claude`, optionally with `-e VAR=value` (added in 3.2).<br>**Monitor:**<ul><li>`capture-pane -p -t <child> -S -<n>`: "If -p is given, the output goes to stdout".</li><li>`list-panes -F '#{pane_dead} #{pane_current_command}'`.</li><li>`remain-on-exit` keeps a finished pane readable.</li><li>`monitor-silence` with the `alert-silence` hook flags a session that has gone quiet.</li></ul>**Continue:** `send-keys -t <child> '<text>' Enter`. After exit, `codex resume <id>` / `claude --resume <id>` in a new tmux session.<br>**Codex sandbox caveat:** as in A6. | https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/tmux.1#L2798-L2818 · https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/tmux.1#L7435-L7440 · https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/tmux.1#L6346-L6352 · https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/tmux.1#L5922-L5926 · https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/tmux.1#L6484-L6485 · https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/tmux.1#L4457-L4475 · https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/CHANGES#L1450 | 2026-10-08 |
+| C1 | PASS (via WSL2) | As screened. | (Screen) | (Screen) |
+
+### FAVOUR scores
+| ID | Verdict | Points | Evidence | Source URL | Source date |
+|----|---------|--------|----------|------------|-------------|
+| F1 | PASS | 2 | Runs the unmodified `claude`/`codex` under their own stored logins, subject to the A3 hygiene step. | https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/tmux.1#L1322-L1345 | 2026-10-08 |
+| F2 | PASS | 2 | 49.9k stars (Screen N1). | https://github.com/tmux/tmux | retrieved 2026-10-19 |
+| F3 | N/A (layer) | 0 | tmux has no iOS app; Termius scores F3. | — | — |
+| F4 | N/A (layer) | 0 | As F3. | — | — |
+| F5 | PASS | 2 | The sessions *are* the vendor TUIs. Attach from the PC (a WSL terminal) or the phone (Termius). `claude --resume` / `codex resume` reopen the same history. | https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/tmux.1#L1089-L1100 · https://learn.chatgpt.com/docs/codex/cli | 2026-10-08 · undated |
+| F6 | N/A (layer) | 0 | Networking component (Tailscale). | — | — |
+| F7 | N/A (layer) | 0 | No file features. | — | — |
+| F8 | N/A (layer) | 0 | No file features. | — | — |
+| F9 | FAIL | 0 | No container environments; panes run in the distro. | — | — |
+| F10 | FAIL | 0 | Sessions live in WSL2:<ul><li>Claude Desktop's `/resume` "is available in local sessions, not in SSH, WSL, or cloud sessions" (claude-desktop.md).</li><li>WSL2 splits `CODEX_HOME` from the Windows Codex app (chatgpt-desktop-codex.md).</li></ul> | https://code.claude.com/docs/en/desktop | undated |
+| **F1–F10** | | **6/20** | | | |
+| F11a | PASS | 2 | An agent spawns a child with the tmux CLI (`new-session -d`), and the child is a first-class tmux session, listed and attachable.<ul><li>**Claude-only native route:** agent teams' split-pane mode "Requires tmux, or iTerm2". This is experimental (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`), with "known limitations on certain operating systems".</li><li>**Codex** needs the A6 approval or rule.</li></ul> | https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/tmux.1#L1322-L1345 · https://code.claude.com/docs/en/agent-teams | 2026-10-08 · undated |
+| F11b | PARTIAL | 1 | `tmux ls` lists every session, but there is no built-in parent link.<ul><li>**Convention:** set a user option on the child ("user options which are prefixed with a '@'"), e.g. `set-option -t <child> @parent <parent>`, and list with `tmux ls -F '#{session_name} #{@parent}'`.</li><li>Agent-teams panes sit in the lead's window (Claude only).</li></ul> | https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/tmux.1#L4629-L4640 · https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/tmux.1#L1282-L1291 | 2026-10-08 |
+| F11c | PASS | 2 | A child runs the same native TUI as a top-level session, so its tool calls show at the same fidelity (`Ctrl+O` transcript viewer; Codex TUI). | https://code.claude.com/docs/en/interactive-mode | undated |
+| F11d | PASS | 2 | Attach and type into the child. Interrupt with `send-keys -t <child> C-c` or Escape, or take over in the native TUI. | https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/tmux.1#L4457-L4475 · https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/tmux.1#L1089-L1100 | 2026-10-08 |
+| F11e | PASS (caveat) | 2 | Everything above works from iPhone/iPad through Termius (ios-terminal.md T1). Caveats: no notification when a child waits for approval, and Codex in Termius is untested. | https://docs.termius.com/terminal/mobile-terminal | undated |
+| **F11** | | **9/10** | | | |
+
+### Harness integration (from source)
+- **How it invokes `claude`:** as the `shell-command` argument of `new-session` (or `new-window` / `split-window`). tmux execs it unmodified in a new pane, with no wrapper, SDK or prompt changes (https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/tmux.1#L1322-L1345).
+- **How it invokes `codex`:** the same way.
+- **OAuth credentials:** none. tmux never reads, copies or proxies them. The only exposure is environment inheritance (A3 row).
+- **Transcripts:**
+  - The harnesses' own stores in WSL2: `~/.claude/projects/...jsonl` and `~/.codex/sessions/...`.
+  - tmux keeps only in-memory scrollback (`history-limit` 2000).
+- **Claude Code agent teams:** split-pane mode puts each teammate (a separate Claude Code instance) in its own tmux pane.
+  - "Teammate permission prompts appear in the lead session".
+  - The docs cover "Orphaned tmux sessions" (`tmux ls`, `tmux kill-session -t <session-name>`).
+  - It is Claude-only and experimental (https://code.claude.com/docs/en/agent-teams, undated).
+
+### WSL2 keep-alive recipe (documented vs untested)
+| # | Step | Status | Source URL | Source date |
+|---|------|--------|------------|-------------|
+| 1 | `%UserProfile%\.wslconfig`: `[general]` `instanceIdleTimeout=-1` | **Documented:** "The number of milliseconds that a distro is idle, before it is shut down. Set to -1 to disable auto shutdown" (default 15000). **Untested** with only a detached tmux server. One WSL#9968 comment (rhsCZ, 2026-07-04) says `instanceIdleTimeout=-1` plus `vmIdleTimeout=-1` "appears to solve this problem". | https://learn.microsoft.com/en-us/windows/wsl/wsl-config · https://github.com/microsoft/WSL/issues/9968 | ms.date 2026-10-16 · 2026-07-04 |
+| 2 | `[wsl2]` `vmIdleTimeout` (optional) | **Documented:** "The number of milliseconds that a VM is idle, before it is shut down" (default 60000), "Only available on Windows 11". The docs give no meaning for `-1`. A WSL#9968 comment (gary90229, 2025-10-18) says it keeps the VM up, not the distro. | (same) | (same) |
+| 3 | systemd + lingering (`loginctl enable-linger`) with a user unit that runs `tmux new-session -d -s main` | **Not a keep-alive.** Microsoft: "systemd services will NOT keep your WSL instance alive". It only auto-starts tmux whenever the distro boots. Community variant: casret on WSL#9968, 2026-03-02, `KillMode=none`. | https://learn.microsoft.com/en-us/windows/wsl/systemd | ms.date 2025-01-13, updated 2026-06-02 |
+| 4 | Windows logon task (Task Scheduler "At log on"): `wsl.exe -d <distro> --exec tmux new-session -d -s main` | The commands are documented (`wsl --exec`, `-d`), but Microsoft does not document the keep-alive effect. Community variant: keep a hidden long-lived `wsl.exe` (shaobosong on WSL#9968, 2026-03-01). **Untested.** | https://learn.microsoft.com/en-us/windows/wsl/basic-commands · https://github.com/microsoft/WSL/issues/9968 | updated 2026-06-02 · 2026-03-01 |
+| 5 | Reboot without interactive Windows sign-in | **Undocumented.** microsoft/WSL discussion #14261: a Task Scheduler `wsl.exe` action failed "with return code 4294967295" on Windows Server 2025, and no working method was posted. Plan on Windows auto-sign-in, or an interactive sign-in after reboot. **Untested.** | https://github.com/microsoft/WSL/discussions/14261 | 2026-02-24 |
+| 6 | Verify | **Documented:** `wsl --list --running`. Close all terminals, check after more than 8 s, then re-attach from Termius. | https://learn.microsoft.com/en-us/windows/wsl/wsl-config | ms.date 2026-10-16 |
+
+### Practicalities
+- **Environment hygiene:** see the A3 row. Do it before the first `tmux` command after each distro start, since the server inherits that shell's environment.
+- **Version lag:**
+  - Everything used here is in Ubuntu 24.04's 3.4: `new-session -d -s -c` (and `-e`, added in 3.2), `capture-pane -p`, `send-keys`, user options `@` (2.3), pane formats, `remain-on-exit` and `monitor-silence` (https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/CHANGES#L1450 · https://github.com/tmux/tmux/blob/7f2a35ad3321f9ba57a1062ca73b1f3ff26aca53/CHANGES#L2416).
+  - CAO's floor is 3.3+ (lead, cli-agent-orchestrator.md).
+  - 3.8 requires a source build (wiki).
+- **Related orchestrators:** Gas City (default tmux runtime), CAO (one tmux session per agent) and Claude agent teams (split panes) all build on tmux. Any of them inherits these facts (keep-alive, environment hygiene, the Codex sandbox caveat for agent-issued tmux commands). cmux-tui is an alternative multiplexer for the same layer and is not built on tmux (cmux.md).
+
+### Stack fit
+**Minimal terminal stack (TS-min):** Termius (iPhone/iPad) → Tailscale → SSH (Windows OpenSSH Server then `wsl`, or the distro's `sshd`; both givens per 7.12 and 7.20) → tmux in WSL2 → unmodified `claude` and `codex`. Indicative only; Stage 4 decides.
+
+| Gate / item | Indicative | From | Note |
+|---|---|---|---|
+| A1 | PASS | Termius + tmux | 7.4 plus the keep-alive setup. No approval notifications. Codex in Termius untested. |
+| A2 | PASS | vendor TUIs + resume | agentsview optional as a viewer. |
+| A3 / A4 | PASS | the CLIs | Environment hygiene. |
+| A5 | PASS if SFTP lands in the distro; otherwise PARTIAL | Termius SFTP | **What Termius SFTP does on mobile:** browses remote folders (refresh "works on both the desktop and mobile"); downloads a file "to open it in an app on your device"; uploads via the Upload button or drag from Files.<br>**Reaching WSL2 ext4:** run the distro's `sshd`, reachable through either:<ul><li>mirrored networking (Windows 11 22H2+: "Connect to WSL directly from your local area network", plus a Hyper-V firewall rule); or</li><li>`netsh interface portproxy` (NAT mode).</li></ul>**Undocumented:** whether Windows OpenSSH's SFTP reaches `\\wsl.localhost` paths.<br>**Alternative:** keep repos on `/mnt/c` for Windows SFTP or SMB, at a WSL2 file-performance cost.<br>Sources: https://docs.termius.com/organize-and-connect-to-hosts/managing-files-with-sftp (undated) · https://learn.microsoft.com/en-us/windows/wsl/networking (ms.date 2024-07-16, updated 2026-06-02) |
+| A6 / A7 / A8 | PASS (workaround) | tmux + CLIs | Codex sandbox approval or rule caveat. |
+| C1 | PASS | all | — |
+| F6 | PARTIAL | Tailscale | Serve → WSL2 returns 502 (#9228, tailwind.md). Alternatives: mirrored networking with the tailnet IP:port, or Termius port forwarding (foreground only). |
+| F10 | 0 | — | WSL2 sessions are invisible to the Windows desktop apps. |
+
+- **Indicative 7.17 stack scores (for Stage 4):**
+  - F1 2, F2 2 (tmux 49.9k, Tailscale 37.7k; Termius is closed, so N/A), F3 2 (Termius), F4 2 (Termius), F5 2, F6 1, F7 1 (download-to-open, no in-app preview), F8 2 (Termius upload; paste-to-`/tmp`), F9 0, F10 0 → **about 14/20**.
+  - F11 = **9/10** (tmux).
+- **Conflicts:**
+  - tmux has no native Windows build, so it can't join the Windows-native Stack 1 placement.
+  - On Pro, Termius session logs capture terminal text by default (ios-terminal.md).
+  - CAO, Gas City or Claude agent teams can sit on top of TS-min, adding first-class delegation or a web view without changing the substrate.
+
 ## Open questions
 - **Do merge commits count toward N2's "authored ≥10% of non-bot commits"?** Thomas Adam's 19.5% is 94% merges of the OpenBSD tree. Most fall on a quarter-hour cadence, though 27 carry hand-resolved conflicts. Without merges he has 1.5%. mgrant0's single merge of someone else's PR went into a feature branch.
   - Which verdict changes: N2 PASS → FAIL under the strict alternative, which would screen tmux out (7.12) and remove the tmux runtime that Gas City and CAO depend on.
@@ -64,3 +159,12 @@ These are not gates. Indicative readings are to be re-checked at Stage 4.
 - **Which iOS terminal app passes N1–N3?** That is the `ios-terminal` screen (Termius, Blink Shell). Without one, no tmux-based stack clears A1 through 7.4.
 - **What tmux version do the orchestrators require?** Gas City's minimum is not established here; CAO says 3.3+ (a lead).
   - Why it matters: whether the distro package is enough or a source build becomes a setup step.
+- **Resolved 2026-10-19 (deep-dive):**
+  - The N2 merge-commit question was ruled in brief 7.20 (PASS, narrow; strict alternative FAIL).
+  - The iOS terminal is settled: Termius passes (ios-terminal.md T1). Blink fails N2.
+- **Does `instanceIdleTimeout=-1` alone keep a distro whose only activity is a detached tmux server running for days on the user's WSL version?**
+  - Why it matters: A1 persistence and the "always-on" constraint. Settle it with a live test (step 6 of the recipe).
+- **Does a sandboxed Codex `tmux` call work once approved, or with a `["tmux"]` allow rule?** The tmux socket lives under `/tmp/tmux-<uid>` unless `TMUX_TMPDIR` is set, and Codex's bubblewrap mounts may hide it.
+  - Why it matters: Codex→Claude delegation through tmux (A6, A8, F11a). The `claude -p` route stays available regardless.
+- **Does Windows OpenSSH's SFTP reach `\\wsl.localhost\<distro>` paths?**
+  - Why it matters: it picks the A5 route (Windows sshd vs the distro's sshd) for TS-min.
