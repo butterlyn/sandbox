@@ -13,6 +13,18 @@
 
 ## Summary
 - Screen: FAIL at C1. This covers cmux as scoped in 7.19: the macOS terminal app with its socket API and CLI, and its iOS companion.
+- Deep-dive (cmux-tui only, 2026-10-19, deepdive-cmux):
+  - A1 PASS when paired with Termius under 7.4 (PARTIAL alone).
+  - A2, A6 PASS. A7 PASS (workaround; sandbox clause not exercised).
+  - A8 PASS, first-class through cmux's own CLI, both directions.
+  - A5 FAIL: no file view, so a partner is needed.
+  - A3/A4 PASS (re-confirmed: hooks only).
+  - FAVOUR F1–F10 = 6/20; F11 = 8/10.
+  - It can replace tmux as the WSL2 session layer, but it is a young, unadvertised sub-product. Its last release was 2026-09-17, and one author wrote about 93% of 90-day commits.
+- Correction (2026-10-19, deepdive-cmux): the detached owner that the screen's Open questions doubted is implemented, and it is the default.
+  - Plain `cmux` and `cmux server ensure` spawn a `--headless` owner with `setsid` and null stdio ([local_owner.rs#L319-L357](https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/crates/cmux-tui/src/local_owner.rs#L319-L357); `server.detached_owner` defaults to `true`, [configuration.md#L381](https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/docs/configuration.md#L381)).
+  - The README line "Detached local startup is deferred…" concerns `server start` with remote listeners.
+  - What is missing is boot-time start (no service unit) and idle reaping.
 - Sub-component cmux-tui (`npx cmux`, cmux's Linux TUI multiplexer, found while checking C1): HOLD (A1).
   - N1–N3 PASS (same repo); C1 PASS (via WSL2); A3/A4 PASS; A1 PARTIAL.
   - It is not the scoped product. The orchestrator decides whether to admit it as a stack component (7.12).
@@ -50,6 +62,106 @@
 
 **Docs/release conflict (section 6):** the README FAQ and the docs index say macOS-only, but npm `cmux` 0.13.4 ships official Linux x64/arm64 TUI builds, and cmux.com/linux offers a Linux browser nightly. The release wins for those deliverables. The macOS app itself is macOS-only.
 
+## Deep-dive
+
+Scope: **cmux-tui** only (npm `cmux` 0.13.4, the Linux TUI multiplexer in `cmux-tui/`), as the WSL2 session layer. The macOS app and iOS companion failed C1 and are out. Source is pinned to `42048bd` (2026-10-19). Prefix `P` = `https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui`. Checked 2026-10-19 by deepdive-cmux.
+
+### ALWAYS gates (cmux-tui, component level)
+
+| ID | Verdict | Evidence (short quote or exact paraphrase) | Source URL | Source date |
+|----|---------|---------------------------------------------|------------|-------------|
+| A1 | **PASS with Termius (7.4)**; PARTIAL alone | **7.4 conditions:**<br>(1) The terminal app is a named, screened component: Termius (T1) is SCREEN PASS in research/ios-terminal.md.<br>(2) Sessions persist while the phone is disconnected. A plain `cmux` (or `cmux server ensure`) "starts (or reuses) a detached headless owner … detaching never ends it". The owner is spawned "with no controlling terminal and null stdio" via `setsid`, so it outlives the SSH connection. `server.detached_owner` defaults to `true`.<br>(3) **(i) List and read:** the sidebar lists workspaces, agents and tabs, and `cmux session list` / `cmux agent list` work from a shell. Attach replays the exact screen (Ghostty VT state), then streams live, and `attach --terminal <id>` shows one TUI full-screen, which suits a phone. **(ii) Message and approve:** typing, Esc/Ctrl keys and approvals happen in the native TUI. **(iii) Start:** `cmux workspace create --name x`, then `cmux workspace x run -- claude` (or `codex`), or a new tab in the TUI. This covers both harnesses.<br>**Caveats:** the distro must stay up (WSL keep-alive, as for tmux), and there are no phone notifications.<br>**Not counted:**<br>• the in-tree web frontend (xterm.js over WSS, with TLS "for example with `tailscale serve --https=8443`") is a reference demo that you build and run with `npm run dev`, so 7.16a makes it PARTIAL;<br>• cmux's iOS direct SSH is unreleased. | https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/docs/getting-started.md#L54-L66 · https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/crates/cmux-tui/src/local_owner.rs#L1-L16 · https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/crates/cmux-tui/src/local_owner.rs#L319-L357 · https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/docs/configuration.md#L381 · https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/README.md#L48-L53 · https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/spec/cli.md#L278-L380 · https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/frontends/web/README.md#L1-L40 | 2026-09-16 · 2026-09-28 · 2026-09-28 · 2026-10-10 · 2026-09-27 · 2026-10-01 · 2026-09-16 |
+| A2 | PASS | Each session is the native `claude`/`codex` TUI in a PTY, so tool calls show as the vendor renders them, live and on re-attach.<br>Native transcripts stay where the CLIs write them, because the wrappers change no config directory. `claude --resume <id>` and `codex resume <id>` show the full record.<br>`agent list` carries Claude's `agent_session_id`, "opaque metadata that a client can pass to the agent's own resume path (for Claude, `claude --resume <id>`)", and it "survives a restart".<br>**Caveat:** `pane run` / `workspace run` default to `--on-exit close`, which "leaves only the durable exit receipt". Use `--on-exit keep` to keep a finished child's final screen. The native transcript remains either way. | https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/spec/resource-api-v2.md#L213-L235 · https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/spec/cli.md#L255-L276 · https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/crates/cmux-tui/src/claude_wrapper.rs#L52-L76 | 2026-09-27 · 2026-10-01 · 2026-09-28 |
+| A5 | FAIL (component) | cmux-tui has no file browser and no file transfer. Browser panes are "attach-only" to a separate cmux-browser process, which ships as a Linux nightly only. Phone file visibility must come from a partner (e.g. Termius SFTP, if its deep-dive confirms it; GitHub is committed state only = PARTIAL). | https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/README.md#L104-L106 | 2026-09-27 |
+| A6 | PASS | **A6a:** the shims `exec` the next real `claude`/`codex` on PATH with hooks only (see Harness integration). There is no API-key handling, and both run on the user's own logins in WSL2.<br>**A6b:** transcripts stay in WSL2 `~/.claude/projects` and `~/.codex/sessions`, which cmux does not redirect, and cmux persists `agent_session_id` for retrieval. Raise Claude's `cleanupPeriodDays` (7.7). | https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/crates/cmux-tui/src/claude_wrapper.rs#L52-L76 · https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/crates/cmux-tui/src/codex_wrapper.rs#L37-L60 · https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/spec/resource-api-v2.md#L213-L235 · https://code.claude.com/docs/en/claude-directory | 2026-09-28 · 2026-10-10 · 2026-09-27 · undated, retrieved 2026-10-19 |
+| A7 | PASS (workaround); separate-sandbox clause not exercised | All panes share the WSL2 filesystem. `workspace run` / `pane run` "preserve exact argument arrays after `--`", e.g. `codex exec -C <dir> …`, so files and folders are handed over by path. cmux-tui offers no per-session sandbox. | https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/spec/cli.md#L255-L276 | 2026-10-01 |
+| A8 | **PASS, first-class, both directions** | Every pane exports `CMUX_TUI_SOCKET`, so an agent in one pane drives the session through cmux's public CLI. Mutations carry idempotency keys, and the docs tell agent orchestrators to own a dedicated session.<br>**Create:** `cmux pane current split --right`, then `cmux workspace current run -- codex exec --json …` (or `-- claude …`).<br>**Monitor:** `cmux agent list` (working/waiting/done from hooks), `cmux terminal <id> screen read\|wait`, `terminal <id> output read`, `terminal <id> process wait`.<br>**Resume:** `cmux terminal <id> write --text …` then `keys enter` into a live TUI, or a new pane running `codex resume <id>` / `claude --resume <agent_session_id>`.<br>**Caveats:**<br>• Whether Codex's sandbox lets Codex reach the cmux Unix socket without an approval is UNKNOWN.<br>• `cmux` must be on PATH in panes (`npm i -g cmux`). | https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/spec/cli.md#L141-L176 · https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/spec/cli.md#L278-L380 · https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/docs/getting-started.md#L119-L139 · https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/spec/resource-api-v2.md#L199-L235 | 2026-10-01 · 2026-10-01 · 2026-09-16 · 2026-09-27 |
+| A3/A4 | PASS (screen verdict re-confirmed) | Hooks are appended only (7.16d):<br>• Claude gets a merged `--settings` with session hook groups, and `preferredNotifChannel` is set to `notifications_disabled` ("Claude's own would duplicate them").<br>• Codex gets `--enable hooks` plus `-c hooks.<event>=[…]` and `hooks.state` trust entries.<br>Neither prompt nor tool set is replaced, and nothing touches credentials. | https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/crates/cmux-tui/src/claude_wrapper.rs#L146-L151 · https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/crates/cmux-tui/src/agent_hook_install.rs#L1997-L2012 | 2026-09-28 · 2026-10-15 |
+
+### FAVOUR scores (cmux-tui, component level)
+
+| ID | Verdict | Points | Evidence | Source URL | Source date |
+|----|---------|--------|----------|------------|-------------|
+| F1 | PASS | 2 | Official binaries under their own logins. The wrappers `exec` the real CLI with hooks only. Credential reads: a non-test grep finds only env-scrub tests. | https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/crates/cmux-tui/src/claude_wrapper.rs#L52-L76 · https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/crates/cmux-tui/src/codex_wrapper.rs#L37-L60 | 2026-09-28 · 2026-10-10 |
+| F2 | PASS | 2 | 28.3k stars on manaflow-ai/cmux, the repo holding the cmux-tui source | https://github.com/manaflow-ai/cmux | retrieved 2026-10-19 |
+| F3 | FAIL | 0 | No released iOS app reaches cmux-tui. cmux iOS is TestFlight-only and pairs with a Mac. Direct SSH is unreleased; its PRD status is "D8 SSH library spike next". | https://cmux.com/docs/ios · https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/docs/prd/ios-direct-ssh.md#L3 | undated, retrieved 2026-10-19 · 2026-09-28 |
+| F4 | FAIL | 0 | As F3 | https://cmux.com/docs/ios | undated, retrieved 2026-10-19 |
+| F5 | PASS | 2 | Native TUIs in panes; `attach --terminal <id>` shows the bare TUI "without the sidebar, status bar, pane border, or other tabs" | https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/README.md#L53 | 2026-09-27 |
+| F6 | FAIL | 0 | cmux-tui has no phone path to a WSL2 dev server. Its HTTP workspace API "refuses non-loopback binds" and is an automation API, not a preview. Tailscale Serve is the partner. | https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/docs/remote.md#L18-L24 | 2026-10-01 |
+| F7 | FAIL | 0 | No file viewer | https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/README.md#L104-L106 | 2026-09-27 |
+| F8 | FAIL | 0 | No file transfer | https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/README.md#L104-L106 | 2026-09-27 |
+| F9 | FAIL | 0 | The Docker and microVM "create sources" are prototype UX: the picker "never invokes Docker or a cloud API" | https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/docs/machines.md#L19 · https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/docs/configuration.md#L213 | 2026-09-16 · 2026-10-10 |
+| F10 | FAIL | 0 | Sessions live in WSL2. Claude Desktop's `/resume` works in "local sessions, not in SSH, WSL, or cloud sessions", and the Codex Windows app uses its Windows `CODEX_HOME` (research/claude-desktop.md, research/chatgpt-desktop-codex.md) | https://code.claude.com/docs/en/desktop | undated, retrieved 2026-10-19 |
+| **F1–F10** | | **6/20** | | | |
+| F11a | PASS | 2 | Agents spawn sessions through cmux's own CLI and socket (`workspace … run`, `pane split`), so children are cmux terminals by default | https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/spec/cli.md#L255-L380 | 2026-10-01 |
+| F11b | PARTIAL | 1 | Children appear in the sidebar's `agents` (or `workspaces → agents`) views with their state, but no field links a child to its parent. The spec lists "multiple agents, root leases, continuations" as missing. | https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/docs/configuration.md#L87 · https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/spec/programmability.md#L70 | 2026-10-10 · 2026-09-23 |
+| F11c | PASS | 2 | Children are native TUIs like the parent, so tool calls show at the same fidelity | https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/spec/cli.md#L346-L352 | 2026-10-01 |
+| F11d | PASS | 2 | Attach, `write`, `keys ctrl+c` and take over in the native TUI | https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/spec/cli.md#L141-L176 | 2026-10-01 |
+| F11e | PARTIAL | 1 | From the iPhone only through Termius (7.4): a TUI on a small screen with no notifications. cmux's own phone path is unreleased. | research/ios-terminal.md · https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/docs/prd/ios-direct-ssh.md#L32 | 2026-10-19 · 2026-09-28 |
+| **F11** | | **8/10** | | | |
+
+### Harness integration (from source)
+- **`claude`:**
+  - At startup the server writes a shim to `~/.local/share/cmux-tui/shims/claude` and puts it first on every pane's PATH. The shim runs `cmux-tui agent claude-wrapper`, which:
+    - finds the next real `claude` on PATH;
+    - folds every `--settings` into one private `0600` file with the session hook groups and `preferredNotifChannel: notifications_disabled`;
+    - removes the shim from PATH;
+    - `exec`s the real binary.
+  - Management commands (`--version`, `mcp`, `doctor`, `update` …) pass through untouched. Opt-out: `CMUX_TUI_CLAUDE_HOOKS_DISABLED=1`.
+  - Sources: [claude_wrapper.rs#L52-L76](https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/crates/cmux-tui/src/claude_wrapper.rs#L52-L76), [#L146-L151](https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/crates/cmux-tui/src/claude_wrapper.rs#L146-L151), [agent-hooks.md#L39-L67](https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/docs/agent-hooks.md#L39-L67).
+- **`codex`:**
+  - The `codex` shim runs `cmux-tui agent codex-wrapper`, which `exec`s the real `codex` with `--enable hooks` and `-c hooks.<event>=[…]` plus `hooks.state` trust hashes. User hooks and their trust stay unchanged.
+  - `exec`, `resume` and `fork` sessions are covered. Opt-out: `CMUX_TUI_CODEX_HOOKS_DISABLED=1`.
+  - Sources: [codex_wrapper.rs#L37-L60](https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/crates/cmux-tui/src/codex_wrapper.rs#L37-L60), [#L83-L98](https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/crates/cmux-tui/src/codex_wrapper.rs#L83-L98), [agent_hook_install.rs#L1997-L2012](https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/crates/cmux-tui/src/agent_hook_install.rs#L1997-L2012), [agent-hooks.md#L81-L92](https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/docs/agent-hooks.md#L81-L92).
+- **OAuth credentials: none.**
+  - cmux-tui does not read, copy or proxy Claude or ChatGPT credentials. In `crates/`, the non-test code has no reference to `.credentials.json`, `auth.json` or vendor endpoints; the matches for `OPENAI_API_KEY` are env-scrubbing tests (e.g. the plugin-build env).
+  - No 7.16b policy-risk note is needed.
+  - Panes inherit the owner's environment, so keep API-key variables unset before starting the owner.
+- **Transcripts:** in the native locations inside WSL2. cmux also persists agent state and `agent_session_id` in its session projection and journal.
+
+### Maintenance risk (cmux-tui sub-product)
+- **Commit share.** For `main` commits touching `cmux-tui/` from 2026-07-21 to 10-19 (anonymous clone, retrieved 2026-10-19):
+  - Lawrence Chen has about 2,520 across three identities (`Lawrence Chen`, `lawrencecchen`, `cmux-lawrence`), about 93%.
+  - Austin Wang has about 122 (two identities), and Leo has 20.
+  - Since the last release (2026-09-17) the split is more even: Austin Wang 52, Lawrence Chen 41, Leo 19, Abdulaziz Albahar 3.
+  - Source: https://github.com/manaflow-ai/cmux/commits/main/cmux-tui (retrieved 2026-10-19).
+- **Release cadence.**
+  - npm `cmux` went from 0.10.0 (2026-08-15) to 0.13.4 (2026-09-17), and there has been no release in the 32 days since. The npm maintainers are `lawrencechen` and `austinywang` (https://registry.npmjs.org/cmux, retrieved 2026-10-19).
+  - The TUI nightly workflow was removed as "dormant" on 2026-10-05 (#17419, per Screen).
+  - cmux.com never mentions cmux-tui.
+  - Repo-level N2 and N3 pass, but the sub-product is young and unadvertised, and releases have paused.
+- **cmux iOS direct SSH would reach cmux-tui** once it ships. Per the PRD:
+  - "cmux-tui mode adds cmux's own primitives (workspaces, persistent terminals, multi-device attach) over SSH" (D1).
+  - The phone lists cmux-tui workspaces and tmux sessions on any SSH host (D22, D31, D34).
+  - `+` offers "New cmux-tui Workspace" (D35).
+  - The phone installs a pinned cmux-tui to `~/.local/bin` (D10).
+  - Status: "D8 SSH library spike next" (L3). Code is merged (#14149, 2026-09-28) but not released.
+  - If it ships on the App Store, cmux iOS plus cmux-tui could replace Termius for A1 and earn F3/F4. While it is TestFlight-only, it is PARTIAL (7.16a).
+  - Source: https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/docs/prd/ios-direct-ssh.md#L3, #L32, #L41, #L52, #L82-L83 (2026-09-28).
+- **No idle reaping.** "cmux-tui has no idle reaping today (runs until `server stop`)" (PRD D13, https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/docs/prd/ios-direct-ssh.md#L44). That is fine for an always-on PC, but forgotten sessions accumulate.
+
+### Stack fit (WSL2 session layer: cmux-tui vs tmux)
+- **What cmux-tui adds over tmux:**
+  - agent awareness: hooks feed `agent list` states and `agent_session_id` for resume;
+  - a typed, noun-first CLI with JSON output and idempotency keys for agents (create, run, read, wait, write, keys), which raises F11a;
+  - exact screen restore on attach;
+  - a sidebar of workspaces and agents.
+- **What is the same as tmux:**
+  - It needs a WSL keep-alive.
+  - The phone reaches it through Termius → Tailscale → Windows OpenSSH → `wsl`.
+  - There are no phone notifications.
+- **Recipe (from docs; not tested hands-on):**
+  1. In WSL2, install with `npm i -g cmux` (needs Node; the package ships static musl binaries). Install and log in to `claude` and `codex` in WSL2. Keep API-key variables unset, and raise `cleanupPeriodDays`.
+  2. Start a durable owner with one explicit socket: `cmux server ensure --session agents --socket ~/.cmux/agents.sock`.
+     - Run it from a Windows logon task (`wsl.exe -d <distro> --exec …`) plus `.wslconfig` `instanceIdleTimeout=-1`, the same keep-alive as tmux (research/tmux.md).
+     - Pass the explicit `--socket` everywhere, because an SSH login may resolve a different default socket directory: `$XDG_RUNTIME_DIR`, then `$TMPDIR`, then `/tmp` (https://github.com/manaflow-ai/cmux/blob/42048bddfc8dc622ee13f43886084270ce836524/cmux-tui/docs/getting-started.md#L119-L127; PRD D34).
+  3. On the phone, run `cmux --session agents --socket …` in Termius (attach), or `cmux attach --terminal <id>` to show one agent full-screen.
+- **Conflicts:**
+  - (a) The shim turns off Claude's own notifications, and cmux's replacements appear only inside the TUI.
+  - (b) A shell rc that prepends `~/.local/bin` to PATH bypasses the shim. Hooks are lost; gates are unaffected.
+  - (c) Gas City and CAO are built on tmux, not cmux-tui. cmux-tui can view a tmux session (`tmux attach` in a pane), but pick one session layer.
+- **Composition verdict:** cmux-tui can replace tmux in a Termius-based stack and adds first-class, CLI-driven delegation. Its sub-product maintenance risk makes tmux the conservative choice; treat cmux-tui as the agent-aware option.
+
 ## Open questions
 - **Which layers would cmux fill if the user added a Mac?** This matters only if the user's setup changes, since C1 fails for the scoped product today. Leads, not verdicts:
   - **PC terminal (on the Mac).** `cmux ssh` would front the always-on PC: agents run in WSL2 and the Mac app uploads `cmuxd-remote-linux-*`. This needs sshd in WSL2 and a network path such as Tailscale.
@@ -75,3 +187,6 @@
   - It also has a `CodexAppServerSession`, which "does not own ChatGPT refresh credentials" per the design note.
   - cmux Cloud runs Claude Code, Codex and others on Manaflow-hosted VMs and lets them "use your own sign-in" (#20069, 2026-10-13). That is the 7.6 third-party-hosted row: A3 PARTIAL unless an approved arrangement is documented.
   - A skills.sh lead says the app attaches a computer-use MCP server to the agent sessions it launches. Check that this is additive (A4).
+- **(deep-dive) Codex sandbox and the cmux socket:** can a Codex session inside its default Linux sandbox connect to the cmux Unix socket without an approval prompt? This affects how smooth A8 is in the Codex→Claude direction, not whether it passes.
+- **(deep-dive) Web frontend packaging:** will the in-tree reference web frontend be packaged and documented for remote use? That would give a webapp A1 path (with `tailscale serve`) without Termius.
+- **(deep-dive) Release status:** cmux-tui has had no release since 0.13.4 (2026-09-17), and the TUI nightly was retired as "dormant". Watch for a release, or for cmux.com documenting cmux-tui. Both bear on N3 for the sub-product if it is ever judged separately from the repo.
