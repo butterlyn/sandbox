@@ -27,7 +27,7 @@
   - It has open issues reporting deleted files and missed changes.
   - A stack that relies on it gets PARTIAL for that path under 7.16a.
 - A1, A3 and A4 are N/A (layer): it syncs vault files and launches no agent sessions.
-- Main caveats for A5 (this component cannot clear A5 by itself):
+- Main caveats for A5 (graded at stack level, not here):
   - Files and folders whose names start with `.` never sync. The docs name `.git`, `.gitignore` and `.vscode`.
   - Code files sync only after "Sync all other types" is enabled on every device.
   - Single files are capped at 5 MB (Standard) or 200 MB (Plus).
