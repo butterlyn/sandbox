@@ -13,6 +13,13 @@
 
 ## Summary
 - Screen: SCREEN HOLD (A1)
+- Deep-dive (2026-10-19), component level:
+  - **PASS:** A2, A3, A4, A6, and A8. A8 is first-class in both directions through CAO's own MCP tools and `cao agent` CLI.
+  - **PASS (workaround):** A7. The separate-sandbox clause is not exercised.
+  - **A1 PARTIAL on CAO alone:** the web UI has every function, but its layout is not built for phones.
+  - **A1 PASS at stack level:** through Termius + tmux attach (7.4).
+  - **A5 FAIL:** there is no file browser, so a partner is needed.
+  - **FAVOUR:** F1–F10 = 4/20; F11a–e = 8/10.
 - **Healthy AWS Labs project with several maintainers (N3, N1, N2 PASS).**
   - Not archived, with no deprecation wording. v2.5.4 shipped 2026-10-15.
   - `main` has 225 non-bot commits from 49 authors in the last 90 days, the latest on 2026-10-19. 1.5k stars.
@@ -71,7 +78,90 @@
 
 **Access note:** per 7.0, page facts (stars, archived flag, releases, issues) came from WebFetch of github.com pages. Code and history came from anonymous clones in the scratchpad: `--depth 1` for source, and blob-less with `--shallow-since=2026-04-22` for history. They were read and grepped only, never run.
 
+## Deep-dive
+
+- Checked 2026-10-19 by deepdive-cli-agent-orchestrator.
+- Source is read at the v2.5.4 tag (`B/` prefix as above; tag commit `5eb58fa`, 2026-10-14), so every `B/` link dates 2026-10-14.
+- The clone was read and grepped only, never run.
+
+### ALWAYS gates (component level)
+
+| ID | Verdict | Evidence | Source URL | Source date |
+|----|---------|----------|------------|-------------|
+| A1 (re-check), web UI path | PARTIAL | **Function:** (i)–(iii) work for both harnesses (screen rows).<br>**Remote use is supported:**<ul><li>`--host` plus `CAO_ALLOWED_HOSTS`, `CAO_WS_ALLOWED_CLIENTS` (the iPhone's tailnet IP) and `CAO_WS_ALLOWED_ORIGINS` if cross-origin.</li><li>Local-token mode protects "Every request to a scope-gated route, the PTY WebSocket handshake and the AG-UI stream". The UI takes the token from `#token=<token>` and holds it per browser tab.</li></ul>**Phone layout (source):** the tab bar is `<nav className="flex gap-1 py-2">`, holding up to 8 `px-4 py-2` icon-and-label buttons inside `max-w-7xl mx-auto px-6`, with no wrap or `overflow-x` handling. On a phone-width screen it will overflow. Nothing about phones is designed, documented or tested. | B/web/src/App.tsx#L159-L188 ; B/docs/configuration.md#L355-L366 ; B/docs/configuration.md#L389 | 2026-10-14 |
+| A1 (re-check), stack path via Termius + tmux | PASS at stack level, needing ios-terminal T1 and tmux | **CAO sessions are tmux sessions:** "You can attach directly to a session to watch or interact with agents in real time" (`tmux attach -t cao-…`). They persist while detached (tmux.md).<br>**Partners:** Termius (T1) is `SCREEN PASS`; tmux is `SCREEN PASS` (narrow N2, ruling 7.20).<br>**Through Termius,** for both harnesses:<ul><li>(i) `tmux ls` and attach;</li><li>(ii) type into the native TUI, including permission prompts if a profile turns them on;</li><li>(iii) start a session with `cao launch --agents <profile> --provider claude_code\|codex` in a chosen directory, or open the web UI's Spawn form.</li></ul> | B/docs/tmux.md#L3-L12 ; B/docusaurus/docs/features/multi-provider.md#L22-L31 ; research/tmux.md ; research/ios-terminal.md | 2026-10-14 ; 2026-10-19 |
+| A2 | PASS | **During the run:** CAO runs the native TUIs. Claude Code and Codex render each tool call, live in the web UI's xterm view and through `tmux attach`.<br>**After the run:** native transcripts persist.<ul><li>CAO passes no `--no-session-persistence` and no `--ephemeral`, and sets no `CODEX_HOME` override (a grep of `providers/claude_code.py`, `providers/codex.py` and `services/wiki_compiler.py` finds none).</li><li>Transcripts land in `~/.claude/projects/…jsonl` ("Full conversation transcript: every message, tool call, and tool result") and `~/.codex/sessions`.</li><li>Retrieval is through `claude --resume` / `codex resume`, the vendor TUIs (7.5). The CAO API also accepts `resume_session_id` for Claude.</li></ul>**Caveats:**<ul><li>CAO's own Output view is a 32 KB trailing tail ("Not unbounded scrollback"), not a structured tool record.</li><li>Handoff workers are closed ("Clean up the terminal with /exit") after completion. Their trail then survives only in the native transcript.</li></ul> | B/src/cli_agent_orchestrator/providers/claude_code.py#L397-L409 ; B/src/cli_agent_orchestrator/api/main.py#L3449-L3450 ; B/src/cli_agent_orchestrator/mcp_server/server.py#L323-L335 ; B/docs/configuration.md#L162 ; https://code.claude.com/docs/en/claude-directory ; https://github.com/openai/codex/blob/89461ea6833832b0551ce24ee32205824d5c108d/codex-rs/rollout/src/lib.rs#L86-L95 | 2026-10-14 ; undated, retrieved 2026-10-19 ; 2026-10-19 |
+| A3, A4 | PASS (unchanged from screen) | Unmodified `claude` and `codex` on their own logins; prompts are appended, not replaced (7.16d). See the screen rows. Another doc conflict: the Multi-Provider table lists Codex auth as "OpenAI API key", while the provider guide and source show ChatGPT sign-in works. | B/docusaurus/docs/features/multi-provider.md#L11-L20 | 2026-10-14 |
+| A5 | FAIL (component); needs a partner | The web UI has no file tree, viewer or upload. Its component list is Agent, Dashboard, Flows, Inbox, Memory, Output viewer, Plugins, Profiles, Settings, Terminal and Workflows panels. Partner options:<ul><li>Tailscale SMB can't publish WSL2 ext4 (tailwind.md).</li><li>Termius SFTP into the WSL2 distro's OpenSSH server (a given, 7.20) is the candidate. It is graded in the ios-terminal deep-dive.</li></ul> | B/web/src/components/ (directory listing) ; research/tailwind.md | 2026-10-14 |
+| A6 | PASS | **A6a:** the delegated worker is the same unmodified CLI on its own login (screen A3 and A4 rows). Its harness comes from the worker profile's `provider` field, with the supervisor's provider as fallback (`resolve_provider`).<br>**A6b:**<ul><li>Native transcripts persist in WSL2 `~/.claude/projects` and `~/.codex/sessions` (A2 row).</li><li>Teardown (handoff `/exit`, `delete_terminal`, worktree discard) removes panes and checkouts, not transcripts.</li><li>Raise Claude's `cleanupPeriodDays` (7.7). Retrieval is `claude --resume` / `codex resume`.</li></ul> | B/src/cli_agent_orchestrator/utils/agent_profiles.py#L464-L500 ; B/docusaurus/docs/features/multi-provider.md#L50-L58 | 2026-10-14 |
+| A7 | PASS (workaround); sandbox clause not exercised | **Shared filesystem:** "By default, agents start in the supervisor's current working directory", or at an explicit `working_directory`.<br>**Worktrees:** `use_worktree` gives each worker its own branch ("commit AND merge/push results before finishing").<br>**Separate sandboxes:** CAO's remote-node topology (`target_host`, one `cao-server` per pod) is "Not combinable with use_worktree (remote nodes have no shared git…)", and no file hand-over across nodes is documented. On one PC the clause is not exercised. No F9 credit (7.7). | B/src/cli_agent_orchestrator/mcp_server/server.py#L286-L330 ; B/src/cli_agent_orchestrator/mcp_server/server.py#L268 ; B/docs/control-planes.md#L57 | 2026-10-14 |
+| A8 | PASS, first-class, both directions | **Cross-provider:** "A supervisor on one provider can delegate to workers running on entirely different providers". A worker profile pins `provider: codex` or `provider: claude_code`, so a Claude supervisor can drive Codex workers and the reverse. E2E suites test "Supervisor→worker delegation … 2 per provider".<br>**Create:** the `assign` (non-blocking) and `handoff` (blocking) MCP tools, or `cao agent assign\|handoff` ("CLI equivalents of the cao-mcp-server orchestration tools").<br>**Monitor:** `cao agent status <id>` (unknown/idle/processing/completed/waiting_user_answer/error), `cao agent result <id>`, `send_message` callbacks, and `get_handoff_result`.<br>**Resume:** `send_message(receiver_id=<worker>)` delivers into an assigned worker's inbox when idle, the same terminal and context. Also `cao agent send-message`.<br>**Interrupt:** `cao agent cancel`.<br>**Caveats:**<ul><li>Handoff workers are torn down after completion, so use `assign` for workers you want to continue.</li><li>Codex supervisors rely on `omit_tools_from=["deferred"]`, which needs Codex 0.150 or later.</li></ul> | B/docusaurus/docs/features/multi-provider.md#L7 ; B/docs/codex-cli.md#L106-L123 ; B/docs/codex-cli.md#L384-L394 ; B/src/cli_agent_orchestrator/mcp_server/server.py#L490-L560 ; B/src/cli_agent_orchestrator/mcp_server/server.py#L834-L866 ; B/src/cli_agent_orchestrator/cli/commands/agent.py#L76-L93 ; B/src/cli_agent_orchestrator/cli/commands/agent.py#L283-L335 | 2026-10-14 |
+| C1 | PASS (via WSL2), unchanged | There is no service mode ("Leave `cao-server` running in its own terminal tab or tmux window"). Run it in a tmux window or a systemd user unit, plus the WSL keep-alive (tmux.md). | B/docusaurus/docs/getting-started/installation.md#L82 | 2026-10-14 |
+
+### FAVOUR scores
+
+| ID | Verdict | Points | Evidence | Source URL | Source date |
+|----|---------|--------|----------|------------|-------------|
+| F1 | PASS | 2 | Bare `claude` and `codex` on their own logins; CAO reads no credentials (screen). | B/src/cli_agent_orchestrator/providers/claude_code.py#L530-L543 | 2026-10-14 |
+| F2 | FAIL | 0 | 1.5k stars, under 5,000. | https://github.com/awslabs/cli-agent-orchestrator | retrieved 2026-10-19 |
+| F3 | FAIL | 0 | No iOS app; a web UI only. | (screen) | — |
+| F4 | UNKNOWN | 0 | No documented tablet layout. The desktop layout may suit iPad landscape, but that is untested. | B/web/src/App.tsx#L159-L188 | 2026-10-14 |
+| F5 | PASS | 2 | Native TUIs in tmux, reached through `tmux attach` or the web UI's live terminal; the API supports Claude `resume_session_id`. | B/docs/tmux.md#L3-L12 | 2026-10-14 |
+| F6 | FAIL | 0 | No localhost preview or port forwarding. | — | — |
+| F7 | FAIL | 0 | No file viewer. | — | — |
+| F8 | FAIL | 0 | No file transfer. | — | — |
+| F9 | FAIL | 0 | One-agent-per-pod cluster topologies exist, but they are not per-session images on one PC, and cross-node hand-over isn't shown (7.7). | B/docs/control-planes.md#L57 | 2026-10-14 |
+| F10 | FAIL | 0 | With CAO in WSL2, its sessions are not launched through, or listed in, the Windows desktop apps (claude-desktop.md, chatgpt-desktop-codex.md). | research/claude-desktop.md | 2026-10-19 |
+| **F1–F10** | | **4/20** | | | |
+| F11a | PASS | 2 | Agents spawn workers through CAO's own MCP tools and `cao agent` CLI. | B/src/cli_agent_orchestrator/mcp_server/server.py#L286-L330 | 2026-10-14 |
+| F11b | PARTIAL | 1 | Workers are created "in the same session" and listed under "Terminals in <session>". `caller_id` ("Terminal that created this one via handoff/assign") exists in the API, but the UI shows no parent link. | B/src/cli_agent_orchestrator/models/terminal.py#L92-L94 ; B/web/src/components/AgentPanel.tsx#L270-L292 | 2026-10-14 |
+| F11c | PASS | 2 | Worker panes get the same live TUI and Output views as top-level terminals. Caveat: handoff panes close after completion. | B/web/src/components/AgentPanel.tsx#L376-L445 | 2026-10-14 |
+| F11d | PASS | 2 | Attach to the native TUI (tmux or the web live terminal), message (Quick Send / `send_message`), interrupt (`cao agent cancel`), take over by typing. | B/docs/tmux.md#L3-L12 ; B/src/cli_agent_orchestrator/cli/commands/agent.py#L320-L335 | 2026-10-14 |
+| F11e | PARTIAL | 1 | CAO's own phone path is the web UI, which is not phone-designed. Full parity from iPhone comes through Termius + tmux at stack level. | (A1 rows) | 2026-10-14 |
+| **F11a–e** | | **8/10** | | | |
+
+### Harness integration (from source)
+- **How it invokes `claude`.**
+  - CAO types `unset <CLAUDE* vars>; claude …` into a tmux pane. It keeps only the Bedrock/Vertex/Foundry switches and `CLAUDE_CODE_EFFORT_LEVEL` (B/src/cli_agent_orchestrator/providers/claude_code.py#L530-L543).
+  - The default is `--dangerously-skip-permissions`. A profile's `permissionMode` replaces it with `--permission-mode <default|acceptEdits|plan|auto|bypassPermissions>` (#L397-L404; B/docs/claude-code.md#L64-L70, #L96-L100). So permission prompts are a supported configuration (7.16c).
+  - Trade-off: "approval prompts block handoff/assign flows" until answered, from the web UI's live terminal or from Termius.
+- **How it invokes `codex`.**
+  - `codex --yolo …` by default. A profile can opt out via `codexProfile`, but "Any unrestricted allowed-tools configuration (`allowedTools: ["*"]` …) forces `--yolo`" (B/docs/codex-cli.md#L157).
+  - The MCP server is injected with `-c mcp_servers.<name>…`, plus `omit_tools_from=["deferred"]` (#L106-L123).
+- **OAuth credentials: none.** CAO never reads, copies or proxies Claude or Codex credentials (screen grep), so no 7.16b policy-risk note is needed. Because `CLAUDE*` variables are unset, `CLAUDE_CODE_OAUTH_TOKEN` (`claude setup-token`) cannot be used; the user's `/login` inside WSL2 is the only Claude path.
+- **User-file change.** CAO writes `skipDangerousModePermissionPrompt: true` into the user-wide `~/.claude/settings.json` (B/src/cli_agent_orchestrator/providers/claude_code.py#L577). That affects the user's other Claude sessions too.
+- **Security.**
+  - "Default posture … the API performs no authentication", and the default bind is loopback.
+  - The local token "is inherited by every agent pane", so a compromised agent can read it (B/docs/configuration.md#L389-L391).
+  - Remote exposure therefore needs `CAO_AUTH_LOCAL_TOKEN`, plus allowlists restricted to the phone's tailnet IP.
+- **Transcripts:** native, as in the A2 row. The memory compiler, on by default, runs `claude -p --tools ""` / `codex exec` in the background. Those runs persist transcripts and use subscription quota.
+
+### Stack fit
+- **Covers:** the orchestrator layer, with first-class cross-harness delegation, plus a desktop web UI.
+- **Needs:**
+  - networking (Tailscale);
+  - an iPhone client: Termius with tmux, because the web UI isn't phone-designed;
+  - an A5 partner: Termius SFTP into WSL2's OpenSSH server, pending the ios-terminal deep-dive;
+  - optionally agentsview with `wsl:` markers, for a structured A2 view.
+- **Setup in WSL2:**
+  1. `uv tool install cli-agent-orchestrator`, then tmux 3.3 or later (apt is fine).
+  2. Run `/login` in `claude` and `codex login` (ChatGPT) inside WSL2.
+  3. Keep `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `apiKeyHelper` and `OPENAI_API_KEY` unset, and raise `cleanupPeriodDays`.
+  4. Start `cao-server --host <bind>` in its own tmux window (or a systemd user unit) with `CAO_AUTH_LOCAL_TOKEN`, `CAO_ALLOWED_HOSTS=<tailnet name>` and `CAO_WS_ALLOWED_CLIENTS=<iPhone tailnet IP>`.
+  5. Keep WSL alive: `instanceIdleTimeout=-1` plus a Windows logon `wsl.exe` task (tmux.md).
+  6. Reach it from the tailnet through mirrored networking at tailnet-IP:9889. Tailscale Serve → WSL2 has an open 502 issue (tailwind.md).
+  7. Write profiles: a supervisor plus workers pinned to `provider: codex` / `provider: claude_code`. Add `permissionMode` / `codexProfile` if you want prompts.
+  8. On the phone: Termius SSH → `tmux attach -t cao-<session>`, plus the web UI at `http://<tailnet>:9889/#token=…` for listing and spawning.
+- **Conflicts and risks:**
+  - WSL2 placement gives F10 = 0, and Tailscale SMB can't serve ext4 for A5.
+  - The global `skipDangerousModePermissionPrompt` write.
+  - The memory compiler runs by default and uses quota.
+  - The CAO 3.0 roadmap (multi-tenant SaaS, #777) would need re-checking against 7.16b and 7.13.
+  - The "Beta" PyPI classifier is a 7.16a caveat.
+
 ## Open questions
+- **Deep-dive: does the web UI work acceptably on an iPhone despite the non-wrapping tab bar?** It affects A1 on CAO alone and F11e. Only a hands-on test can settle it.
+- **Deep-dive: can Termius SFTP browse and open WSL2 workspace files?** That decides A5 for any CAO stack; see the ios-terminal deep-dive.
 - **Does the web UI work acceptably in iPhone Safari?** This decides A1.
   - PARTIAL → PASS needs primary evidence: a vendor doc, issue or screenshot of phone use. Alternatively, the orchestrator may rule that source-level function plus documented remote access suffices.
   - Otherwise CAO's sessions need A1 from the 7.4 tmux path (a screened iOS terminal, tmux, and SSH into WSL2) or from another client.
