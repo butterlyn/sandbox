@@ -41,7 +41,7 @@ Access note: per 7.0, I did not use api.github.com or `add_repo`. Star counts an
   - The naver.com address is likely the same person: the App Store seller is "Wooyoung Kim". That is not established. Even counted separately, it is 151 commits (6%), under the 10% bar.
   - The next humans are snowyukitty (two names, one address) with 68, bluemas 58, Przemek Poppe 29 and JLPJ 18. Releases are published by github-actions.
   - PRs are squash-merged with committer "GitHub", so git cannot show who merged other people's PRs. No one else reaches 10% of commits, so N2 PASS would need a second human who merged someone else's PR or published a release in the window. The PR pages would settle it.
-  - 446 commits carry a `Co-authored-by: openwong2kim` trailer, and at least 514 carry Claude co-author trailers (`noreply@anthropic.com`), which 7.3 excludes.
+  - 446 commits carry a `Co-authored-by: openwong2kim` trailer, and 720 carry a Claude co-author trailer (`noreply@anthropic.com`), which 7.3 excludes as an author identity.
 - **Is the iOS app a separate, closed-source component?** The App Store app "wmux - Workspace for AI agents" is free, sold by "Wooyoung Kim", version 1.10.0 ("5d ago"), and needs iOS/iPadOS 18+.
   - The repo at HEAD has no iOS or Xcode project; its only Swift code is `native/computer-use-macos`. So the iOS app looks closed-source.
   - N1 would then not apply to it, but the closed-source N2 rule (7.3: "FAIL: a sole-developer product") probably would, since the seller is an individual.
