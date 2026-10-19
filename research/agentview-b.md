@@ -9,6 +9,14 @@
 
 ## Summary
 - Screen: PASS. N3, N1, N2 and C1 PASS; A1, A3 and A4 are N/A (layer).
+- Deep-dive (2026-10-19, against v0.45.0):
+  - **A2:** PASS as a stack UI, after setting `result_content_blocked_categories = []`.
+  - **A6b:** retrieval PASS, persistence PARTIAL (it keeps a parsed copy, not native JSONL).
+  - **A5:** PARTIAL (an edit feed only). Other gates are N/A (layer).
+  - **FAVOUR:** F1–F10 4/20; F11a–e 5/10.
+  - **Key fact:** cross-harness delegated runs (`codex exec` from Claude, `claude -p` from Codex) are listed, but not linked to their parent in v0.45.0. Linking is unreleased, on `main` only.
+- Correction (2026-10-19, deep-dive): the default archive does not store result content for `Read` and `Glob` tool calls (`result_content_blocked_categories = ["Read", "Glob"]`, v0.45.0 `internal/config/config.go#L1252`). The "full" row in the Facts table needs that caveat.
+- Correction (2026-10-19, deep-dive): in v0.45.0 the MCP tools are `search_sessions`, `list_sessions`, `get_session_overview`, `get_messages`, `get_memory_status`, `search_content`, `get_usage_summary` and `query_recall`. `get_tool_calls` and `get_child_sessions` exist only on `main`.
 - **Active, with a team behind it.** v0.45.0 shipped 2026-10-09, and `main` has 724 non-bot commits from 89 authors in the last 90 days. 6.2k stars. In the N2 window, three humans each wrote over 10% of non-bot commits: Wes McKinney 25.7%, Rod Boev 23.9% and Marius van Niekerk 13.8%. Marius also merges other people's PRs.
 - **The rename.** v0.30.0 (2026-05-24) moved the repo from Wes McKinney's personal account to the `kenn-io` org. That org belongs to Kenn Software LLC, "a small team of veteran builders led by Wes McKinney". The project moved from one person's account to a company with a named team, which supports N2. Wes still tags every release (42 in the window).
 - **C1.** It installs natively on Windows: the desktop app (MSI or setup.exe), a CLI zip or a PowerShell installer. It also installs inside WSL2: Linux tarball, AppImage or Docker. Transcripts on the other side of the WSL2/Windows boundary need documented config:
@@ -76,6 +84,135 @@ Required by brief 7.16b. Both features below are opt-in and off by default. With
   - Strict alternative: any third-party read of plan credentials fails A3 for that path.
   - Stack setup: leave `codex-cloud` disabled and do not use claude.ai Sync.
 
+## Deep-dive
+
+- **Checked:** 2026-10-19 by deepdive-agentview-b.
+- **Versions:**
+  - Latest release v0.45.0: commit `b9d0a20`, published 2026-10-09.
+  - `main` `4b15b06` (2026-10-18), still HEAD on 2026-10-19 per `git ls-remote`.
+  - Release permalinks back anything a user gets today. `main` permalinks are used where the code is unchanged, or where the point is that a feature is not released yet. Where they differ, the release wins.
+- **Role:** a read-only transcript viewer and archive.
+  - It starts no agent work.
+  - In the recommended configuration it touches no vendor credentials.
+  - So most gates are N/A (layer). It contributes to A2, A6b (retrieval), A8 "monitor", and a read-only iPhone view.
+
+### ALWAYS gates (what this component contributes)
+
+| ID | Verdict | Evidence | Source URL | Source date |
+|----|---------|----------|------------|-------------|
+| A1 | N/A (layer) | It is a viewer. It covers only A1 (i) on iPhone: it lists Claude and Codex sessions and "uses Server-Sent Events to stream new messages in real time" in Safari. It cannot message, approve or start sessions, so (ii) and (iii) must come from another component. | https://github.com/kenn-io/agentsview/blob/b9d0a207f51ff27b84adbaae2a91b344247079b3/docs/usage.md#L909-L914 | 2026-10-09 (v0.45.0) |
+| A2 | PASS as a stack UI, after one setting change (7.16c) | **What it shows.** For every Claude and Codex session on disk it shows the user prompt, the assistant messages, and "Tool invocations … showing the tool name, arguments, and output". This covers live sessions (SSE) and finished ones (archive). Claude Task/Agent children open "the subagent's full transcript inline". Headless `claude -p` and `codex exec` runs count as "Subagents" (non-interactive) and are listed too. **The setting.** The default `result_content_blocked_categories = ["Read", "Glob"]` means the result content of those two tool categories "is not stored". Set it to `[]` so every tool result is kept. That is a documented setting, so 7.16c applies. **Limits:** it cannot show runs the harness never wrote: `codex exec --ephemeral` and `claude -p --no-session-persistence`. Stacks must not use those flags for delegated work. | https://github.com/kenn-io/agentsview/blob/b9d0a207f51ff27b84adbaae2a91b344247079b3/docs/usage.md#L632-L640 · https://github.com/kenn-io/agentsview/blob/b9d0a207f51ff27b84adbaae2a91b344247079b3/docs/usage.md#L676-L681 · https://github.com/kenn-io/agentsview/blob/b9d0a207f51ff27b84adbaae2a91b344247079b3/docs/activity.md#L57-L73 · https://github.com/kenn-io/agentsview/blob/b9d0a207f51ff27b84adbaae2a91b344247079b3/internal/config/config.go#L1243-L1252 · https://github.com/kenn-io/agentsview/blob/4b15b064a8f619267abd28fab3192af8a1eaa88a/docs/configuration.md#L243 | 2026-10-09 (v0.45.0) · 2026-10-18 (main docs) |
+| A3 | N/A (layer) | It runs no inference. In the recommended configuration it reads no vendor credentials (see "Harness integration" below). | (screen table) | — |
+| A4 | N/A (layer) | Not a harness. | (screen table) | — |
+| A5 | PARTIAL (contribution; cannot clear A5) | "Recent Edits collects every `Edit` and `Write` tool call that recorded a file path", and each entry links to the message that made the change. 7.2 grades that "diffs only" view PARTIAL: there is no folder tree, no current file contents, and no files the agents did not edit. | https://github.com/kenn-io/agentsview/blob/b9d0a207f51ff27b84adbaae2a91b344247079b3/docs/recent-edits.md#L6-L22 | 2026-10-09 (v0.45.0) |
+| A6a | N/A (layer) | It does not delegate. | — | — |
+| A6b | PARTIAL (contribution) | Graded against 7.7's three conditions. **(1) Where transcripts are written:** it reads the harnesses' own stores (defaults `.claude/projects`, `.codex/sessions` and `.codex/archived_sessions`, following `CLAUDE_CONFIG_DIR` and `CODEX_HOME`). **(3) Retrieval path: PASS.** Options:<ul><li>the web UI;</li><li>`agentsview session export <id>`, which streams the raw source file while it exists;</li><li>HTML or Markdown export;</li><li>the read-only MCP (`list_sessions`, `get_messages`, `search_content`).</li></ul>**(2) Persistence: PARTIAL.** The archive keeps a *parsed* copy after source files are deleted, minus Read/Glob results unless reconfigured. That is not the native JSONL, so `claude --resume` cannot use it. The raw-source `agentsview archive capture` is on `main` only: "These commands are under development and are not in the latest release." Native-JSONL persistence still depends on the stack raising Claude's `cleanupPeriodDays`. | https://github.com/kenn-io/agentsview/blob/4b15b064a8f619267abd28fab3192af8a1eaa88a/internal/parser/types.go#L170-L215 · https://github.com/kenn-io/agentsview/blob/b9d0a207f51ff27b84adbaae2a91b344247079b3/docs/commands.md#L1472 · https://github.com/kenn-io/agentsview/blob/b9d0a207f51ff27b84adbaae2a91b344247079b3/docs/mcp.md#L60-L69 · https://github.com/kenn-io/agentsview/blob/4b15b064a8f619267abd28fab3192af8a1eaa88a/docs/configuration.md#L52-L74 · https://github.com/kenn-io/agentsview/blob/4b15b064a8f619267abd28fab3192af8a1eaa88a/docs/commands.md#L9-L13 | 2026-10-09 (v0.45.0) · 2026-10-18 (main) |
+| A7 | N/A (layer) | It moves no files between sessions. | — | — |
+| A8 | N/A (layer); supports "monitor" | Either harness can read the other's transcripts through the read-only MCP (`list_sessions`, `get_messages`, `search_content`). "The tools are read-only": no create or resume. `get_tool_calls` and `get_child_sessions` exist only on `main`. | https://github.com/kenn-io/agentsview/blob/b9d0a207f51ff27b84adbaae2a91b344247079b3/docs/mcp.md#L7-L22 · https://github.com/kenn-io/agentsview/blob/b9d0a207f51ff27b84adbaae2a91b344247079b3/docs/mcp.md#L60-L69 | 2026-10-09 (v0.45.0) |
+
+### FAVOUR scores
+
+| ID | Verdict | Points | Evidence | Source URL | Source date |
+|----|---------|--------|----------|------------|-------------|
+| F1 | N/A (layer) | 0 | It runs no agent work. Its optional Resume and Insights launches use the unmodified binaries on the user's own login (screen A3 row). | (screen table) | — |
+| F2 | PASS | 2 | 6.2k stars on kenn-io/agentsview. | https://github.com/kenn-io/agentsview | retrieved 2026-10-19 |
+| F3 | FAIL | 0 | No iOS app and no PWA manifest; it is a webapp only (screen A1 row). | (screen table) | — |
+| F4 | PARTIAL | 1 | The mobile layout switches on at `max-width: 760px` (kit-ui `MEDIA.medium`). Wider viewports, which includes most iPads, get the desktop three-column layout. There is no documented tablet or touch layout, and it was not tested on iPad. | https://github.com/kenn-io/agentsview/blob/4b15b064a8f619267abd28fab3192af8a1eaa88a/frontend/src/lib/stores/ui.svelte.ts#L455-L463 · https://github.com/kenn-io/agentsview/blob/4b15b064a8f619267abd28fab3192af8a1eaa88a/frontend/src/lib/components/layout/ThreeColumnLayout.svelte#L391 | 2026-10-18 (main) |
+| F5 | PARTIAL | 1 | It hands sessions off to the native harness: `claude --resume <id>`, `codex resume <id>` (with `--fork-session` for forks), an "Open in Codex Desktop" link `codex://threads/<id>`, and Claude Desktop `claude://resume?session=…`. On Windows it cannot launch a terminal ("unsupported OS … for terminal launch"), so the user copies the command instead. The Claude Desktop link is opened with macOS `open`, so it is macOS-only. A Windows handler for `codex://` is unverified. | https://github.com/kenn-io/agentsview/blob/4b15b064a8f619267abd28fab3192af8a1eaa88a/internal/server/resume.go#L48-L60 · https://github.com/kenn-io/agentsview/blob/4b15b064a8f619267abd28fab3192af8a1eaa88a/internal/server/resume.go#L396-L406 · https://github.com/kenn-io/agentsview/blob/4b15b064a8f619267abd28fab3192af8a1eaa88a/internal/server/resume.go#L882-L888 | 2026-10-18 (main; same flow in v0.45.0 docs/usage) |
+| F6 | N/A (layer) | 0 | — | — | — |
+| F7 | FAIL | 0 | There is no file viewer. Recent Edits shows only Edit/Write tool calls, and file content appears only inside tool inputs and results. | https://github.com/kenn-io/agentsview/blob/b9d0a207f51ff27b84adbaae2a91b344247079b3/docs/recent-edits.md#L6-L22 | 2026-10-09 |
+| F8 | N/A (layer) | 0 | — | — | — |
+| F9 | N/A (layer) | 0 | It has its own Docker image, but it hosts no agent sessions. | — | — |
+| F10 | N/A (layer) | 0 | It is not a vendor app. See F5 for its deep links into vendor apps. | — | — |
+| **F1–F10** | | **4/20** | | | |
+| F11a | FAIL | 0 | It cannot create sessions; the MCP is read-only. | https://github.com/kenn-io/agentsview/blob/b9d0a207f51ff27b84adbaae2a91b344247079b3/docs/mcp.md#L7-L22 | 2026-10-09 |
+| F11b | PARTIAL | 1 | **Linked in v0.45.0:** native subagents. Claude Task/Agent children nest in the "Sub-Agent Tree" through spawn edges; Codex's own subagents link through the `session_meta` subagent source.<br>**Not linked:** cross-harness CLI delegation. A `codex exec` started from Claude's Bash tool, or a `claude -p` started by Codex, is listed as a "Subagent" run, but "Parentless workers appear as sidebar roots".<br>**Main only:** launcher links (`agentsview session parent <worker-id> <manager-id>`, `PUT /api/v1/sessions/{id}/parent`) are in the "Unreleased" changelog. Under 7.16a that counts as PARTIAL. | https://github.com/kenn-io/agentsview/blob/b9d0a207f51ff27b84adbaae2a91b344247079b3/docs/usage.md#L419-L424 · https://github.com/kenn-io/agentsview/blob/b9d0a207f51ff27b84adbaae2a91b344247079b3/internal/parser/codex.go#L417-L423 · https://github.com/kenn-io/agentsview/blob/b9d0a207f51ff27b84adbaae2a91b344247079b3/docs/activity.md#L57-L73 · https://github.com/kenn-io/agentsview/blob/4b15b064a8f619267abd28fab3192af8a1eaa88a/docs/changelog.md#L84-L89 · https://github.com/kenn-io/agentsview/blob/4b15b064a8f619267abd28fab3192af8a1eaa88a/docs/session-api.md#L711-L735 | 2026-10-09 (v0.45.0) · 2026-10-16 (main changelog) |
+| F11c | PASS | 2 | Delegated runs are ordinary archived sessions and render with the same tool blocks as top-level sessions. The Read/Glob storage default applies to both equally. | https://github.com/kenn-io/agentsview/blob/b9d0a207f51ff27b84adbaae2a91b344247079b3/docs/usage.md#L632-L640 | 2026-10-09 |
+| F11d | PARTIAL | 1 | It can hand a delegated session to its native TUI or desktop app (F5). It cannot message, interrupt or take over a running session. | (F5 sources) | 2026-10-18 |
+| F11e | PARTIAL | 1 | From iPhone it can list and live-follow sessions read-only. Resume, fork and handoff happen on the PC. | (A1 row) | 2026-10-09 |
+| **F11a–e** | | **5/10** | | | |
+
+### Harness integration (from source)
+
+- **Claude:** it never runs Claude for agent work. Optional features:
+  - Insights runs `claude -p --output-format json --no-session-persistence --tools ""`, which is tool-less and keeps no transcript.
+  - Resume and fork run `claude --resume <id>` (adding `--fork-session` for forks) in a terminal on macOS or Linux; Windows gets copy-command only.
+  - See the screen's A3 row for permalinks. **Stack advice:** do not use Insights for agent work, because its runs leave no transcript.
+- **Codex:** Insights runs `codex exec --json --sandbox read-only --skip-git-repo-check --ephemeral -`; Resume runs `codex resume <id>`. Same caveats as Claude.
+- **`--dangerously-skip-permissions` through the API.**
+  - The resume request body has `skip_permissions`. When it is true, the Claude command gets `--dangerously-skip-permissions`, on both the resume path and the message-point resume path.
+  - Any caller of the API can ask for it. On a loopback bind without `require_auth`, that means any local process. The Host and Origin checks block DNS rebinding.
+  - On Windows the server only returns the command text, because terminal launch is unsupported. A WSL2 headless daemon has no Linux GUI terminal unless one is configured.
+  - Source: https://github.com/kenn-io/agentsview/blob/4b15b064a8f619267abd28fab3192af8a1eaa88a/internal/server/resume.go#L28 · https://github.com/kenn-io/agentsview/blob/4b15b064a8f619267abd28fab3192af8a1eaa88a/internal/server/huma_routes_sessions.go#L1526-L1531 · https://github.com/kenn-io/agentsview/blob/4b15b064a8f619267abd28fab3192af8a1eaa88a/internal/server/huma_routes_sessions.go#L1633-L1641
+- **`require_auth`.**
+  - Off by default, with the default bind on 127.0.0.1.
+  - A persistent non-loopback `host` from config or the environment is refused without it: "set require_auth = true … or use the --host flag for a one-off unauthenticated bind".
+  - Auto-start also refuses "an unauthenticated daemon on non-loopback host".
+  - The explicit `--host` flag is exempt. **Never use it for phone access.**
+  - Source: https://github.com/kenn-io/agentsview/blob/4b15b064a8f619267abd28fab3192af8a1eaa88a/cmd/agentsview/managed_caddy.go#L166-L181 · https://github.com/kenn-io/agentsview/blob/4b15b064a8f619267abd28fab3192af8a1eaa88a/cmd/agentsview/transport.go#L508-L523 · https://github.com/kenn-io/agentsview/blob/4b15b064a8f619267abd28fab3192af8a1eaa88a/docs/remote-access.md#L6-L62
+- **Codex Cloud import is off by default.** "Fetching from OpenAI is off unless Enabled is true" (`FetchEnabled`). Source: https://github.com/kenn-io/agentsview/blob/4b15b064a8f619267abd28fab3192af8a1eaa88a/internal/config/codex_cloud.go#L19-L36
+- **claude.ai chat sync** runs only when the user starts it, from the Import dialog or `agentsview chrome setup`. It imports consumer chats, not Claude Code sessions. See the screen's policy-risk section.
+- **Claude Code credentials:** it never reads Claude Code's own credentials, and raw capture skips `auth.json` and `.credentials.json` by name (screen).
+- **7.16b note.** The "Credential-handling policy risk" section above still applies to the two opt-in features. With both off, which is the recommended configuration, agentsview reads no vendor credential and makes no vendor call.
+- **Transcripts it relies on:** the harnesses' own JSONL (paths above), plus its own SQLite archive in `~/.agentsview` (or `AGENTSVIEW_DATA_DIR`).
+
+### Stack fit
+
+- **Windows-native topology.** This matches the setup recommended in claude-desktop.md and chatgpt-desktop-codex.md: both CLIs and apps on Windows, repos on `C:\`.
+  - Install the agentsview CLI natively on Windows, via the PowerShell installer or the zip.
+  - Its defaults resolve to `%USERPROFILE%\.claude\projects`, `%USERPROFILE%\.codex\sessions` and `archived_sessions` (registry `DefaultDirs` are home-relative and honour `CLAUDE_CONFIG_DIR` and `CODEX_HOME`).
+  - Put these in `config.toml`:
+    - `require_auth = true`
+    - a fixed `port`
+    - `host` = the PC's Tailscale IP, or `0.0.0.0`
+    - `result_content_blocked_categories = []`
+    - leave `[agents.codex-cloud]` absent or disabled.
+  - Start it with `agentsview daemon start`. There is no Windows service installer, so keep it alive with a logon task.
+  - The desktop app's own sidecar binds `127.0.0.1` on a random port (`--port 0`), so phone access needs the CLI daemon. Untested: whether launching the desktop app on the same data directory reuses, replaces or narrows that daemon (`serve` "reuses or replaces an existing local writable daemon"). Avoid running both on one data directory.
+- **iPhone access over Tailscale.** Two options, and both need the token entered in the UI ("enter the configured token in the frontend"):
+  - Open `http://<pc>.<tailnet>.ts.net:<port>`, with `--public-url` set to exactly that origin (Host check).
+  - Or front a loopback daemon with Tailscale Serve and set `--public-url https://<pc>.<tailnet>.ts.net`. Keep `require_auth` on, because Serve exposes it to every tailnet device.
+  - Source: https://github.com/kenn-io/agentsview/blob/4b15b064a8f619267abd28fab3192af8a1eaa88a/docs/remote-access.md#L6-L62 · https://github.com/kenn-io/agentsview/blob/4b15b064a8f619267abd28fab3192af8a1eaa88a/docs/commands.md#L357-L398
+- **WSL2 topology.** Run agentsview inside WSL2, on the same side as the agents, so file events are local. Two caveats:
+  - The phone then needs WSL mirrored networking or a Windows-side proxy (see tailwind.md).
+  - The Windows app can instead read WSL paths through `wsl:<distro>:` markers, but live freshness across the boundary is unverified; the documented fallback is polling plus a 15-minute full sync (screen Open questions).
+- **Split Windows + WSL2 agents.** Two options:
+  - one daemon with extra `dirs` entries;
+  - or HTTP remote sync from a WSL2 daemon to a Windows collector (`[[remote_hosts]]`, bearer token).
+- **Sandboxed sessions (A6b help, not a guarantee).**
+  - Since 0.37.4, HTTP remote sync keeps "a persistent mirror of each remote machine's syncable source files" on the collector. The parsed archive keeps sessions after the remote is gone.
+  - But the mirror "removes mirror files that disappeared from the manifest" on each successful sync. Native JSONL therefore survives only if the remote is never seen again, or by luck of timing.
+  - A bind-mounted transcript directory remains the reliable A6b path for sandboxes.
+  - Source: https://github.com/kenn-io/agentsview/blob/b9d0a207f51ff27b84adbaae2a91b344247079b3/docs/remote-access.md#L157-L183
+- **Conflicts.**
+  - Default port 8080; it auto-picks another unless one is set explicitly.
+  - Claude's 30-day `cleanupPeriodDays` must still be raised to keep native JSONL.
+  - Harness flags that suppress transcripts make runs invisible.
+  - Never run with a one-off `--host` bind.
+
+### Specific questions
+
+- **Does it link a delegated session to its parent?**
+  - **Native subagents: yes.** Claude Task/Agent through spawn edges; Codex's own subagents through `session_meta`.
+  - **Cross-harness CLI delegation: not in v0.45.0.**
+    - A `codex exec` started from Claude's Bash tool, or a `claude -p` started by Codex, is classified as a non-interactive "Subagent" run and shown as a parentless root.
+    - `main` adds an orchestrator-recorded link (`agentsview session parent <worker-id> <manager-id>` or `PUT /api/v1/sessions/{id}/parent`), which nests the worker under the launcher and rolls up its cost. It is unreleased.
+  - **How to find one today:**
+    - the project or cwd filter, time order, or full-text and semantic search over prompts and tool output;
+    - or search the worker's thread ID, which `codex exec --json` prints into the parent's Bash tool result.
+- **Does it render Codex `exec` and `app-server` sessions, with tool calls?** Yes.
+  - The Codex parser reads every rollout under `sessions/` and `archived_sessions/`.
+  - It marks originator `codex_exec` as non-interactive.
+  - It parses `function_call` / `custom_tool_call` and their outputs, which covers shell, `apply_patch` and MCP calls, and it links Codex's native subagents.
+  - App-server threads are ordinary rollouts in the same store.
+  - `--ephemeral` runs leave no rollout, so they cannot be shown.
+  - Source: https://github.com/kenn-io/agentsview/blob/4b15b064a8f619267abd28fab3192af8a1eaa88a/internal/parser/codex.go#L455-L463 · https://github.com/kenn-io/agentsview/blob/4b15b064a8f619267abd28fab3192af8a1eaa88a/internal/parser/codex.go#L490-L500
+- **Does the archive keep full tool inputs and outputs?**
+  - **Inputs: yes.**
+  - **Outputs: yes, except Read and Glob** under the default `result_content_blocked_categories = ["Read", "Glob"]`. Set `[]` to keep them.
+  - **Images:** kept by default (`tool_result_images = "keep"`).
+  - It is a parsed copy, not the native JSONL.
+
 ## Open questions
 - **Do Resume, fork and Insights make agentsview a platform that launches sessions?**
   - This file follows the orchestrator's framing ("does not launch sessions"), which gives N/A (layer) for A1, A3 and A4.
@@ -101,3 +238,11 @@ Required by brief 7.16b. Both features below are opt-in and off by default. With
   - After a source is deleted, the default archive holds only a parsed copy.
   - Not verified: whether `session export` or the "raw archive" and hosted raw-sync features keep the raw native JSONL.
   - This decides whether agentsview alone meets A6b(1)–(3) with the native transcript, or only with a rendered, parsed copy.
+- **Deep-dive: can an agent learn its own session ID, so it can record a launcher link once `agentsview session parent` ships?**
+  - This needs to work for both Claude and Codex (e.g. an environment variable or hook payload).
+  - Not verified. It decides whether F11b can reach PASS with agentsview.
+- **Deep-dive: can the Windows desktop app and a config-driven CLI daemon (non-loopback, `require_auth`) share one data directory?**
+  - The risk is the desktop sidecar's `--host 127.0.0.1 --port 0` start narrowing or replacing the daemon's bind.
+  - Untested. It decides the phone-access recipe on Windows.
+- **Deep-dive: is a `codex://` URL handler registered on Windows by the Codex or ChatGPT desktop app?**
+  - Unverified. It affects the F5/F11d hand-off from the agentsview UI on Windows.
