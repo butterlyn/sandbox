@@ -409,6 +409,26 @@ Grade every harness path a component uses.
 ### 7.14 Dates
 Policy pages change. For A3 evidence, cite the most recent dated primary page and quote it.
 
+### 7.16 Clarifications after wave 1 (applied uniformly to every candidate)
+Two screens graded the same facts differently, so these rules replace the ambiguous wording. Neither changes the user's gate text. The final report must show which verdicts each clarification moved, and what the stricter alternative would do.
+
+- **a. "Preview/beta only" (section 5).**
+  - PARTIAL applies when a capability is missing from the generally available build: it needs an opt-in experimental flag or setting, a beta, pre-release or TestFlight build, a waitlist, or an admin-gated preview.
+  - A capability that ships enabled in the stable public release (including a public App Store release) counts as available even if the vendor labels it "beta" or "research preview". Record the label as a caveat.
+  - Strict alternative: any beta label makes the gate PARTIAL.
+- **b. Credential handling (7.6).**
+  - **A3 judges the inference path:** do the agents' model calls run in the native harness on the user's subscription?
+  - **Side reads.** A platform may read the user's OAuth credentials (Claude `.credentials.json` or keychain, Codex `auth.json`) for non-inference calls to the vendor's own endpoints, such as a usage or quota display. It may also copy them locally so the unmodified binary can run, e.g. into another `CODEX_HOME`. If the credentials never leave the user's machine except to the vendor itself:
+    - A3: unaffected.
+    - F1: PARTIAL at most for that harness.
+    - The file must carry a **"Credential-handling policy risk"** note quoting the vendor policy (e.g. Anthropic: "developers may not collect, store, or intermediate Claude.ai credentials or session tokens") and saying exactly what the platform does, including any client impersonation such as a spoofed user-agent.
+  - **A3 FAIL** if the platform does any of these:
+    - uses the plan credentials for inference outside the native harness;
+    - sends them to any non-vendor server;
+    - offers its own claude.ai login;
+    - routes other users' requests through the plan.
+  - Strict alternative: any third-party read of Claude OAuth tokens fails A3 for the Claude path.
+
 ### 7.15 Candidates added from discovery
 Proposals and evidence are in `research/discovery.md`.
 
