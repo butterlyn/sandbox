@@ -9,6 +9,16 @@
 
 ## Summary
 - Screen: SCREEN HOLD (A1)
+- Deep-dive (2026-10-19), component level:
+  - **A2 PARTIAL.** Every Bernstein-launched Claude session runs with a fixed `--no-session-persistence`, so no native transcript exists, and the dashboard shows tool inputs but never results. Codex sessions PASS.
+  - **A5 PARTIAL.** Diffs and artifacts only.
+  - **A6: PASS (workaround).** A6b FAILS for Bernstein-spawned Claude children.
+  - **A7: PASS (workaround).**
+  - **A8: PASS (workaround).** Create and monitor are first-class via MCP `bernstein_run`; same-session resume is not.
+  - **A1 PARTIAL (unchanged).**
+  - FAVOUR F1–F10 = 7/20; F11a–e = 6/10.
+  - It can sit in a passing stack only as a Codex-routed orchestrator, with Claude Code covered by another component.
+- Update to the screen (not a correction): Codex rollouts do persist. The spawn has no `--ephemeral`, which settles the screen's open question.
 - **N2 passes the 7.3 test, but only narrowly and against the project's own words.**
   - The README says "Status: beta. Solo-maintained", and GOVERNANCE.md says "Bernstein is a single-maintainer project" and "The project stays single-maintainer".
   - @chernistry wrote 77.0% of the 3,017 human commits in the window; the next human wrote 4.3%. He authored every release commit, and he alone holds releases, tags, org ownership, secrets and publisher identities.
@@ -63,6 +73,86 @@ Access note (7.0):
 - Repo, org, release, PR and profile pages came from WebFetch of github.com. The repo Activity view needs sign-in, so PR mergers were read one PR page at a time.
 - History and source came from anonymous clones under the scratchpad: blob-less `--shallow-since=2026-04-22` for history, `--depth 1` for source. They were read and grepped only.
 
+## Deep-dive
+
+Checked 2026-10-19 by deepdive-bernstein (fork) against v3.22.0 (`b21be2e`). R is the same v3.22.0 blob prefix as above. The source was read from an anonymous `--depth 1 --branch v3.22.0` clone in the scratchpad; nothing was built or run.
+
+### ALWAYS gates (component level)
+
+| ID | Verdict | Evidence (short quote or exact paraphrase) | Source URL | Source date |
+|----|---------|---------------------------------------------|------------|-------------|
+| A2 (Claude sessions) | PARTIAL | <ul><li>**No native transcript.** Every Claude spawn carries `--no-session-persistence`: it is a fixed element of the argv list, and no setting removes it. Anthropic: "Disable session persistence so sessions are not saved to disk and cannot be resumed. Print mode only." So `claude --resume` and agentsview have nothing to show.</li><li>**Tool calls appear without results.** The live log is the wrapper's text conversion of stream-json. It prints assistant text and `[<tool>] <input>`, capped at `BERNSTEIN_LOG_INPUT_CHARS` (default 2000). It never prints `user`/`tool_result` events.</li><li>**The hook sidecar is truncated and not shown.** `.sdd/runtime/hooks/<session>.jsonl` keeps `tool_input` and `tool_output` truncated to 200 characters. No dashboard route or web component reads it; grep found no consumer in `core/routes` or `web/src`.</li><li>The raw stream-json goes only into the wrapper's stdin and is not persisted. A full record with results therefore exists nowhere for Bernstein-launched Claude sessions.</li><li>7.16c cannot rescue this: there is no supported switch.</li></ul> | R/src/bernstein/adapters/claude.py#L478-L493 ; R/src/bernstein/adapters/claude_wrapper_script.py#L24-L70 ; R/src/bernstein/core/server/hooks_receiver.py#L258-L263 ; R/src/bernstein/core/server/hooks_receiver.py#L296-L313 ; https://code.claude.com/docs/en/cli-reference | 2026-10-15 ; CLI reference undated, retrieved 2026-10-19 |
+| A2 (Codex sessions) | PASS | <ul><li>The `codex exec --json` stdout is written verbatim to the session log that the dashboard's live log tails (`stdout=log_file`).</li><li>Codex's JSONL items carry `command`, `aggregated_output` and `exit_code` for commands, and `arguments` and `result` for MCP tool calls. Each tool call is therefore visible with its input and result, as raw JSON lines.</li><li>The native rollout also persists, because Bernstein never passes `--ephemeral`, so `codex resume` renders it too.</li></ul> | R/src/bernstein/adapters/codex.py#L440-L456 ; R/src/bernstein/adapters/codex.py#L485-L494 ; https://github.com/openai/codex/blob/main/codex-rs/exec/src/exec_events.rs ; https://learn.chatgpt.com/docs/non-interactive-mode | 2026-10-15 ; retrieved 2026-10-19 (main) ; undated, retrieved 2026-10-19 |
+| A2 (component) | PARTIAL | <ul><li>A2 must hold for every platform-launched session (7.5), and Bernstein's Claude workers fail it.</li><li>**Configuration route (7.16c):** route every role to Codex (`cli: codex` plus `role_config.<role>.cli: codex`, a documented seed shape). Bernstein-launched sessions then pass A2, but Bernstein stops being a Claude platform (see A3/A4 below).</li><li>The janitor's own `claude -p … --model sonnet` call does persist (no `--no-session-persistence`), so it is visible through `claude --resume` and agentsview.</li></ul> | R/examples/multi-model/bernstein.yaml#L20-L33 ; R/src/bernstein/core/quality/janitor.py#L2366 | 2026-10-15 |
+| A1 (re-check) | PARTIAL (unchanged) | <ul><li>**(ii) messaging.** A message cannot reach a running session. Claude is spawned with `stdout=PIPE` and no stdin pipe, and in `-p` mode it takes no further turns without `--input-format stream-json`. Codex `exec` writes stdout to the log file, also with no stdin. The dashboard's peek "send" bar pipes to stdin only when a pipe is registered (`getattr(result.proc, "stdin", None)`); otherwise it falls back to a file signal. Steer guidance is applied at the next spawn.</li><li>**(iii) starting.** Still no handler on the GUI. A screened iOS terminal (`ios-terminal` T1 Termius) can run `bernstein run --cli claude\|codex …` in a chosen repo. That covers (iii) at stack level, but (ii) stays PARTIAL for Bernstein's own headless sessions.</li></ul> | R/src/bernstein/adapters/claude.py#L722-L730 ; R/src/bernstein/core/agents/spawner_core.py#L5596-L5603 ; R/src/bernstein/core/agents/agent_ipc.py#L1-L5 ; R/src/bernstein/core/routes/session_peek.py#L1-L20 | 2026-10-15 |
+| A5 | PARTIAL | <ul><li>The dashboard shows the per-task Diff tab and agent-posted artifacts (`TaskArtifactsPanel`).</li><li>There is no workspace file tree or file reader: the `/workspace` route returns only repo status (name, path, branch, clean).</li><li>A partner is needed: Tailscale SMB on a Windows-native setup, or an SFTP-capable terminal into WSL2.</li></ul> | R/src/bernstein/core/routes/workspace.py#L19-L60 ; R/web/src/components/artifacts/TaskArtifactsPanel.tsx#L29-L64 ; R/docs/gui/screens.md#L35-L55 | 2026-10-15 |
+| A6a | PASS | <ul><li>Bernstein's children run the unmodified `claude -p` and `codex exec` on the user's own logins. `HOME`/`USERPROFILE` pass through, and nothing reads vendor credentials (see A3/A4 in the Screen table).</li><li>Setup must keep `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` and `OPENAI_BASE_URL` unset.</li></ul> | R/src/bernstein/adapters/env_isolation.py#L33-L60 ; R/src/bernstein/adapters/codex.py#L485 | 2026-10-15 |
+| A6b | PARTIAL | <ul><li>**Codex children: PASS.** The rollout persists under `$CODEX_HOME/sessions` with no `--ephemeral`, and is retrievable with `codex resume` / `codex exec resume <id>`.</li><li>**Bernstein-spawned Claude children: FAIL.** No native transcript is ever written (A2).</li><li>**Workaround path: PASS.** Claude children started directly by a Codex worker with `claude -p` or `claude --bg`, outside Bernstein's spawner, persist normally. Raise `cleanupPeriodDays`.</li><li>So cross-harness delegation can meet A6b only on paths the stack routes around Bernstein's Claude spawner.</li></ul> | R/src/bernstein/adapters/codex.py#L440-L456 ; R/src/bernstein/adapters/claude.py#L492 ; https://learn.chatgpt.com/docs/non-interactive-mode | 2026-10-15 ; undated, retrieved 2026-10-19 |
+| A6 | PASS (workaround, configuration-scoped) | <ul><li>Claude→Codex: through Bernstein (a task routed to Codex) or by running `codex exec` directly.</li><li>Codex→Claude: only by `claude -p` or `--bg` run directly from the Codex worker. This needs network access from Codex's `workspace-write` sandbox, so the user's Codex config must enable it (see Open questions).</li><li>Bernstein's own Claude-child path fails A6b, so the stack must document not using it for delegated work.</li></ul> | (rows above) | 2026-10-15 |
+| A7 | PASS (workaround); separate-sandbox clause not exercised | <ul><li>Workers run in per-task git worktrees, the default `worktree` backend. Handover goes through git (the orchestrator merges worker branches), `bernstein_post_artifact`, and `--add-dir` for Codex.</li><li>Docker sandbox: only the repo's git dir is mounted read-only, and "the host working tree is not visible inside the container". Handover across that boundary is undocumented, so no F9 or separate-sandbox credit.</li></ul> | R/docs/architecture/sandbox.md#L1-L12 ; R/src/bernstein/core/sandbox/backends/docker.py#L480-L496 ; R/src/bernstein/mcp/server.py#L1-L40 | 2026-10-15 |
+| A8 | PASS (workaround); create and monitor are first-class | <ul><li>**Create.** Claude workers receive Bernstein's MCP bridge (`--mcp-config … --strict-mcp-config`) and can call `bernstein_run(goal, role, …, parent_task_id)`.</li><li>**Choosing the harness.** It is chosen indirectly: `role_config.<role>.cli` (e.g. `qa: cli: codex`) routes the subtask to Codex. `bernstein_run` has no adapter parameter.</li><li>**Monitor.** `bernstein_run_status` / `bernstein_status` poll the run.</li><li>**Resume.** Not first-class. Claude cannot continue: persistence is off, although the adapter declares `supports_session_continuation = True` with `--continue`. Codex continuation is not supported (`supports_session_continuation` defaults to False). Workaround: the parent runs `codex exec resume <id>`, or `claude -p --resume <id>` for a Claude child started directly.</li><li>**Codex workers get no bridge.** The Codex adapter accepts `mcp_config` but never uses it, so Codex→Claude goes through the CLI workaround.</li></ul> | R/src/bernstein/adapters/claude.py#L527-L539 ; R/src/bernstein/mcp/server.py#L601-L612 ; R/examples/multi-model/bernstein.yaml#L20-L33 ; R/src/bernstein/adapters/claude.py#L287-L296 ; R/src/bernstein/adapters/base.py#L557 ; R/src/bernstein/adapters/codex.py#L415-L456 | 2026-10-15 |
+| A3/A4 (re-check) | PASS for the paths used; Claude-side A2 limits Bernstein as a Claude platform | <ul><li>The screen's findings stand.</li><li>Extra platform LLM path: the cross-model verifier is `enabled: bool = True` and calls `call_llm(provider="openrouter")`. That needs `OPENROUTER_API_KEY_PAID`; without it, `call_llm` raises "Missing OPENROUTER_API_KEY_PAID". It is a review call, not an agent session, but it would send diffs to a non-native model.</li><li>Setup: leave `OPENROUTER_*` unset and disable the verifier in config.</li></ul> | R/src/bernstein/core/quality/cross_model_verifier.py#L75 ; R/src/bernstein/core/quality/cross_model_verifier.py#L144 ; R/src/bernstein/core/routing/llm.py#L63-L72 | 2026-10-15 |
+
+### FAVOUR scores (component level)
+
+| ID | Verdict | Points | Evidence | Source URL | Source date |
+|----|---------|--------|----------|------------|-------------|
+| F1 | PASS | 2 | Unmodified `claude`/`codex` on their own logins. The Codex auth check only tests that `~/.codex/auth.json` exists, without reading it, so there is no 7.16b side read. | R/src/bernstein/adapters/codex.py#L84-L88 | 2026-10-15 |
+| F2 | FAIL | 0 | 1.3k stars (< 5,000). | https://github.com/sipyourdrink-ltd/bernstein | retrieved 2026-10-19 |
+| F3 | FAIL | 0 | PWA only ("Add to Home Screen"); no App Store app. | R/docs/gui/mobile.md#L13-L21 | 2026-05-18 |
+| F4 | FAIL | 0 | No documented tablet or iPad layout. The mobile doc covers only iOS "Add to Home Screen". | R/docs/gui/mobile.md#L61 | 2026-05-18 |
+| F5 | PARTIAL | 1 | Codex sessions can be opened in the vendor TUI (`codex resume`). Claude sessions cannot: "cannot be resumed". | https://code.claude.com/docs/en/cli-reference | undated, retrieved 2026-10-19 |
+| F6 | PASS | 2 | `bernstein preview` boots the task's dev server in its worktree and tunnels it with `--provider auto\|cloudflared\|ngrok\|bore\|tailscale`. Pin `tailscale`; `auto` falls back to cloudflared (unscreened). | R/docs/operations/preview.md#L1-L15 ; R/docs/operations/preview.md#L85-L93 | 2026-10-15 |
+| F7 | PARTIAL | 1 | Diff tab and the artifacts panel only. | R/web/src/components/artifacts/TaskArtifactsPanel.tsx#L29-L64 | 2026-10-15 |
+| F8 | PARTIAL | 1 | Phone ← PC: agent-posted artifacts can be viewed. Phone → PC: the web client has no upload. | R/web/src/components/artifacts/TaskArtifactsPanel.tsx#L29-L64 | 2026-10-15 |
+| F9 | FAIL (7.7) | 0 | A `docker` backend exists with an `image` option, but host credentials and the working tree are not mounted. No subscription login inside the container is documented, and handover across it is not shown. | R/src/bernstein/core/sandbox/backends/docker.py#L47-L48 ; R/src/bernstein/core/sandbox/backends/docker.py#L480-L496 | 2026-10-15 |
+| F10 | FAIL / UNKNOWN | 0 | Claude sessions are never persisted. Whether `codex exec` rollouts appear in the Codex desktop app is UNKNOWN (see chatgpt-desktop-codex). | R/src/bernstein/adapters/claude.py#L492 | 2026-10-15 |
+| **F1–F10** | | **7/20** | | | |
+| F11a | PARTIAL | 1 | Claude workers spawn subtasks through Bernstein's MCP (`bernstein_run`, `parent_task_id`). Codex workers have no bridge, because `mcp_config` is unused. | R/src/bernstein/mcp/server.py#L601-L612 ; R/src/bernstein/adapters/codex.py#L415-L456 | 2026-10-15 |
+| F11b | PARTIAL | 1 | The parent moves to `waiting_for_subtasks`, and the Deps panel and lifecycle pill show that state. An explicit parent→child view was not confirmed. | R/web/src/components/deps/TaskDepsPanel.tsx#L53 ; R/src/bernstein/mcp/server.py#L601-L612 | 2026-10-15 |
+| F11c | PASS | 2 | Child sessions render exactly like any other Bernstein session, at the same fidelity. That fidelity is itself partial for Claude (A2). | R/src/bernstein/core/routes/agents.py#L356-L381 | 2026-10-15 |
+| F11d | PARTIAL | 1 | Pause, abort and kill are possible. Mid-run messages and native take-over are not, except `codex resume` after a Codex child ends. | R/src/bernstein/core/routes/task_steer.py#L1-L17 | 2026-10-15 |
+| F11e | PARTIAL | 1 | The PWA can view, steer and kill, but not message mid-run or start a run. | R/docs/gui/mobile.md#L13-L21 | 2026-05-18 |
+| **F11** | | **6/10** | | | |
+
+### Harness integration (from source)
+- **`claude`.**
+  - Command: `claude --model … --effort … --permission-mode bypassPermissions --max-turns N --output-format stream-json --verbose --include-hook-events --no-session-persistence [--fallback-model …] [--allowedTools …] [--add-dir …] [--agents …] --max-budget-usd … --json-schema … [--mcp-config <bernstein bridge> --strict-mcp-config] [--append-system-prompt …] -p <prompt>` (R/src/bernstein/adapters/claude.py#L478-L544).
+  - The system prompt is appended, not replaced (7.16d PASS).
+  - Permissions are always bypassed. There is no permission gating for Claude workers.
+- **`codex`.**
+  - Command: `codex exec --sandbox workspace-write -m <model> --json -o <file> [--add-dir …] <prompt>`. `--dangerously-bypass-approvals-and-sandbox` is used only when the operator declares `container` or `vm` host isolation (R/src/bernstein/adapters/codex.py#L105-L135, #L440-L456).
+  - No `--ephemeral`.
+  - The addendum is grafted onto the prompt; base instructions are untouched.
+- **OAuth credentials: none read.**
+  - Claude: the login comes through the passed-through `HOME`/`USERPROFILE`.
+  - Codex: an existence check on `auth.json` only.
+  - Environment: an allowlist plus explicitly passed vendor variables: `ANTHROPIC_API_KEY`, `ANTHROPIC_BETA`, `OPENAI_API_KEY`, `OPENAI_ORG_ID`, `OPENAI_BASE_URL`. These must stay unset (R/src/bernstein/adapters/env_isolation.py#L33-L60).
+- **Transcripts.**
+  - Claude: none. The hook sidecar holds 200-character snippets, and the text log holds inputs only.
+  - Codex: `$CODEX_HOME/sessions` rollouts plus the JSONL log in `.sdd/runtime/<session>.log`.
+- **Other LLM calls.** Optional features (the cross-model verifier, enabled by default; plan generation; the eval judge; the review pipeline) use `call_llm` with OpenRouter, Together, Oxen or g4f API keys. Disable them, or keep those keys unset.
+
+### Stack fit
+- **Topology.** Bernstein runs natively on Windows (supported) or in WSL2. `bernstein run-service submit` runs a detached supervisor. `bernstein gui serve --tunnel --tunnel-provider tailscale` serves the PWA; it is a foreground command, so it needs a Windows logon task or systemd to stay up (unverified). The repo can be on `C:\` for a Windows-native setup.
+- **Layers covered.** Orchestrator plus a phone viewer (PWA).
+- **What partners must supply:**
+  - A1 (iii) start, and (ii) messaging native sessions: Termius + tmux, or the vendor apps.
+  - A5: Tailscale SMB or SFTP.
+  - A2 for Claude: no partner can fix Bernstein's Claude sessions, because no transcript exists.
+- **Only passing configuration.**
+  - Bernstein is a Codex-routed orchestrator (`cli: codex`, every `role_config` entry set to Codex).
+  - Claude Code runs elsewhere in the stack (e.g. claude-desktop or tmux TUIs). A user's Claude session can drive Bernstein through `bernstein mcp` → `bernstein_run`.
+  - Codex children then have full audit trails and persistent rollouts.
+  - Even then, Bernstein adds little over its partners: F11 is 6/10, and mid-run messaging is impossible.
+- **Conflicts and risks:**
+  - Claude workers always run in `bypassPermissions`.
+  - Tunnels default to cloudflared (pin Tailscale).
+  - The cross-model verifier is on by default (disable it).
+  - N2 is narrow: single-maintainer governance, with the second-human merges only since 2026-10-14.
+  - The product is labelled "Status: beta".
+  - Internal contradiction: the adapter advertises transcripts and `--continue` resumption while disabling persistence, which suggests the behaviour may change.
+
 ## Open questions
 - **Does N2 hold in spirit?** The project calls itself "single-maintainer" in three places. Every second-human merge falls on 2026-10-14 or later and was made by one core reviewer. Releases, tags, secrets and publisher identities stay with chernistry, and the charter says "Releases and protected paths wait" when he is away.
   - Under the strict alternative (self-description decisive), N2 → FAIL. That gives `SCREEN FAIL at N2`, and Bernstein could not be used even as glue (7.12).
@@ -76,3 +166,7 @@ Access note (7.0):
   - Unless Bernstein keeps the raw stream-json somewhere, A2 (tool call results in the UI), A6b (native transcript) and F5 (`claude --resume`) are at risk for Claude sessions.
   - Codex keeps its own `$CODEX_HOME/sessions`. That is not verified here.
 - **Networking.** `--tunnel-provider auto` may pick Cloudflare quick tunnels, ngrok or bore, which are unscreened third-party networking. The stack should pin `--tunnel-provider tailscale` (Tailscale is screened as `tailwind`) or reach the dashboard over the tailnet.
+
+- **Deep-dive: Codex sandbox network.** With `--sandbox workspace-write`, Codex workers have no network unless the user's `~/.codex/config.toml` enables it (OpenAI: Codex asks for approval to run commands that need network access; `exec` cannot ask). The Codex→Claude workaround (`claude -p` from a Codex worker) and any Codex call back to Bernstein's REST API both need it. Not tested.
+- **Deep-dive: verifier without a key.** What does the default-on cross-model verifier do when `OPENROUTER_API_KEY_PAID` is missing: skip, or block the merge? Not traced. Disable it in config to be safe.
+- **Deep-dive: will `--no-session-persistence` change?** The adapter's own comments expect transcripts and `--continue`. If a release drops the flag or makes it configurable, re-check A2, A6b, F5 and F10 for Claude.
