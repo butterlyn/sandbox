@@ -397,7 +397,9 @@ Grade every harness path a component uses.
 ### 7.12 Stacks (Stage 4)
 - Every component passes N1–N3.
 - The whole stack passes A1–A8 and C1, with each gate cleared by a named component's PASS.
-- Glue components (e.g. an iOS terminal app, OS file sharing) may be used only if a subagent has screened them against N1–N3 and C1 with primary evidence.
+- Glue components (e.g. an iOS terminal app or a sync tool) may be used only if a subagent has screened them against N1–N3 and C1 with primary evidence.
+- **Givens, not components:** the user's platforms and their built-in features, plus the two harness CLIs. That covers Windows 10/11 (including Windows file sharing over SMB), WSL2, iOS/iPadOS (including the Files app and Safari), and the `claude` and `codex` CLIs. They need no NEVER screening, but any claim that relies on them still needs a primary source (e.g. Microsoft, Apple, Anthropic or OpenAI docs).
+- **Screened out, so not usable even as glue:** any component with `SCREEN FAIL` (see each candidate's file).
 
 ### 7.13 Hosted execution
 - Self-hosted on the user's PC is fine.
