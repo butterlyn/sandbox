@@ -437,6 +437,12 @@ Two screens graded the same facts differently, so these rules replace the ambigu
   - Example of such a path: an offered third-party claude.ai login, when the user can log in with `claude /login` instead.
   - The component then gets the 7.16b policy-risk note, and F1 is at most PARTIAL.
   - Strict alternative: offering a non-compliant login or credential path at all fails A3 for that harness.
+- **d. Native-harness test is the same for both harnesses (7.6, A4).**
+  - A platform that replaces the harness's built-in system prompt or base instructions, or substitutes its own tool set, gets A4 PARTIAL for that harness. Examples:
+    - Claude: a custom `systemPrompt` instead of the `claude_code` preset.
+    - Codex: `model_instructions_file` or `base_instructions` overriding Codex's built-in prompt.
+  - Appending instructions (Claude's preset plus an append, or Codex developer instructions or AGENTS.md) keeps PASS.
+  - If the replacement can be switched off in a supported configuration, 7.16c applies.
 
 ### 7.15 Candidates added from discovery
 Proposals and evidence are in `research/discovery.md`.
