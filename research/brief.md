@@ -466,7 +466,7 @@ Two screens graded the same facts differently, so these rules replace the ambigu
   - Do not re-fail any other gate because the Linux/WSL2 build is labelled experimental or pre-release.
   - Record the vendor's own statements as risks, not failures: the Linux desktop app is "experimental and untested", the host CLI is Beta/pre-release, and WSL support is "not at least for a few months" (#1993).
   - Every other gate is judged as usual.
-- **New candidates:** "Bernstein", "cmux", and AWS's "CLI Agent Orchestrator" (the user confirmed "awe's" meant AWS). The user notes cmux may be a candidate in its own right or a component of a combined stack. Identities are resolved in `research/resolve.md` section D and listed in 7.19.
+- **New candidates:** "Bernstein", "cmux", AWS's "CLI Agent Orchestrator" (the user confirmed "awe's" meant AWS), and "wmux" and "tmux", which the user describes as "cmux for windows/WSL2", i.e. the PC-side terminal/multiplexer layer. The user notes cmux may be a candidate in its own right or a component of a combined stack. Identities are resolved in `research/resolve.md` section D and listed in 7.19.
 
 ### 7.19 Candidates added by the user (identities from resolve.md section D)
 
