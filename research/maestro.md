@@ -9,6 +9,13 @@
 
 ## Summary
 - Screen: SCREEN HOLD (A1)
+- Deep-dive: done 2026-10-19 by deepdive-maestro against v1.0.0 (aa23ffd).
+  - **Pass:** A3, A4 (re-checked under 7.16d), A5, A6, A7 (workaround; the sandbox clause is not exercised) and A8.
+  - **Partial:** A1 and A2.
+  - **FAVOUR:** F1–F10 = **8/20**; F11a–e = **9/10**.
+  - **Delegation is first-class in both directions.** Agents drive Claude Code and Codex sessions through `maestro-cli`: `ask --from`, `dispatch --new-tab --notify-on-complete`, `session list/show`, and `create-agent -t codex|claude-code`. Delegated consult tabs are labelled with the agent that asked and are visible on the phone.
+  - **A1** reaches PASS only in a configuration-scoped reading, which is the orchestrator's call under 7.16c: Full Access mode (the default) plus a per-agent custom arg `--disallowedTools AskUserQuestion`, so Claude has no prompts and asks in plain text.
+  - **A2** needs two things: the "Show tool calls in responses" setting turned on (it is off by default), and a full-transcript viewer partner (agentsview, or vendor TUI resume). Maestro cuts Claude tool output at 4,000 characters, and Auto Run shows only one-line tool summaries.
 - **Health (N3, N1, N2 pass).** Maestro is active and is not a one-person project. It has 3.5k stars, shipped v1.0.0 on 2026-10-09, and has 1,741 non-bot commits to `main` in the last 90 days. Applying 7.3 strictly over 2026-04-22 → 2026-10-19:
   - Pedram Amini wrote 68.5% of the 3,386 non-bot commits and published every release.
   - Raza Rauf (`reachrazamair`) wrote 11.9%.
