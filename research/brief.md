@@ -428,6 +428,15 @@ Two screens graded the same facts differently, so these rules replace the ambigu
     - offers its own claude.ai login;
     - routes other users' requests through the plan.
   - Strict alternative: any third-party read of Claude OAuth tokens fails A3 for the Claude path.
+- **c. Configuration-scoped evaluation** (makes explicit what screens already did for Orca's Chat UI mode, Superset cloud workspaces, Happy's `happy connect` and Warp's Oz):
+  - Gates are judged on the configuration the stack actually uses.
+  - A non-compliant path does not fail the component if all of these hold:
+    - it is optional and off by default, or not the documented default;
+    - a compliant alternative is supported;
+    - the stack documents avoiding it.
+  - Example of such a path: an offered third-party claude.ai login, when the user can log in with `claude /login` instead.
+  - The component then gets the 7.16b policy-risk note, and F1 is at most PARTIAL.
+  - Strict alternative: offering a non-compliant login or credential path at all fails A3 for that harness.
 
 ### 7.15 Candidates added from discovery
 Proposals and evidence are in `research/discovery.md`.
