@@ -16,6 +16,14 @@ Permalink prefixes used below:
 
 ## Summary
 - Screen: SCREEN HOLD (A4)
+- Deep-dive (2026-10-19, deepdive-agor), component level:
+  - **PASS:** A1, A2, A3 (config-scoped), A5, A6, A7, A8, C1.
+  - **A4 PARTIAL**, Codex only. Agor always replaces Codex's built-in prompt and has no supported switch; checked on v0.27.0 and `main` 68cc270.
+  - **A6/A8 split:**
+    - Codex→Claude is first-class through Agor's MCP (`agor_sessions_spawn` / `_prompt` / `_stop`).
+    - Claude→Codex is `PASS (workaround)` through `codex exec` / `codex exec resume`, because Agor's own Codex children inherit the A4 PARTIAL.
+  - **FAVOUR:** F1–F10 = 10/20; F11a–e = 10/10.
+  - **Stack consequence:** Agor can be the Claude-side orchestrator and the iPhone UI. A passing stack still needs another component to launch first-class, native Codex sessions (7.6 "both harnesses first-class").
 - **Health gates pass.**
   - Agor is not archived and has no deprecation notice. It had 672 non-bot commits to `main` in the last 90 days and shipped 0.27.0 on 2026-10-13.
   - GitHub shows 1.5k stars; a mirror gave 1,437 on 2026-10-12.
