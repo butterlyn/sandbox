@@ -9,6 +9,14 @@
 
 ## Summary
 - Screen: SCREEN HOLD (A1)
+- Deep-dive (2026-10-19, deepdive-gas-city, v1.5.0 `f664746`):
+  - **Component-level ALWAYS gates:**
+    - PASS: A2, A3, A4, A6, A7 (sandbox clause not exercised) and A8.
+    - **A8 is first-class** through the platform's own CLI. The official tutorial shows a Claude "mayor" running `gc sling` to a Codex reviewer.
+    - A1 PARTIAL.
+    - A5 FAIL: there is no file browsing, so a partner is required.
+  - **FAVOUR:** F1–F10 = 3/20; F11a–e = 8/10.
+  - **Fact that most affects composition:** Gas City is strong on delegation and audit, weak on the phone. The only documented remote view is a read-only dashboard. Claude sessions could reach the Claude iOS app through `remoteControlAtStartup` (untested). Codex sessions have no screened phone path. The `t3bridge` route into T3 Code's iOS app is undocumented and unverified against T3 v0.1.0.
 - **Project health: healthy, with several maintainers.** Not archived. v1.5.0 shipped 2026-10-05, and `main` has 2,095 commits since 2026-07-21; the last non-bot commit was on 2026-10-19. It has 1.4k stars. Since 2026-04-22, Julian Knutsen wrote 51.7% of non-bot commits and Jim Wordelman 15.6%. Chris Sells and Stephanie Jarmak have also merged other people's PRs. N3, N1 and N2 PASS.
 - **PC side: runs in WSL2.** There are official Linux builds (tarballs and Homebrew), and the docs say "Gas City works under WSL 2 with a standard Ubuntu or Debian distribution". The supervisor runs unattended as a systemd user service. There is no native Windows build. C1 is `PASS (via WSL2)`.
 - **Harnesses: both are native.** The default runtime is tmux. It starts the unmodified `claude` and `codex` interactive TUIs in detached tmux panes, using the user's own logins. On that path, Gas City never reads Claude credential files. Its onboarding probe insists on first-party claude.ai or `oauth_token` auth for Claude and on ChatGPT auth for Codex. A3 and A4 PASS.
