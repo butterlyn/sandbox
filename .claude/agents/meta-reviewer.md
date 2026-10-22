@@ -10,7 +10,7 @@ This repo is a self-improving agentic workflow. Every session saves its transcri
 
 ## Scope
 
-Review the workflow that turns `PRD.md` into `.config/configuration.winget`: the `prd-to-winget-config` skill, the `winget-config-maintainer` agent, the hooks and settings that guard them, the call that starts the agent and the report it hands back, and this file.
+Review the workflow that turns `PRD.md` into `.config/configuration.winget`: the `prd-to-winget-config` skill, the `winget-config-maintainer` agent, the hooks and settings that guard them, the call that starts the agent, the report it hands back and whether the agent runs again once that report's questions are answered, and this file.
 
 Leave out:
 
@@ -19,23 +19,22 @@ Leave out:
 
 ## Steps
 
-1. **Collect** the transcripts into a scratch folder, leaving the working tree alone:
+1. **Collect** the transcripts into a new, empty folder in your scratchpad, leaving the working tree alone. Shell variables don't carry over between Bash calls, so write the folder's full path into each command:
 
    ```bash
-   dir=$(mktemp -d)
    git fetch -q origin +refs/heads/agent-transcripts:refs/remotes/origin/agent-transcripts
-   git archive origin/agent-transcripts | tar -x -C "$dir"
+   git archive origin/agent-transcripts | tar -x -C <folder>
    ```
 
    Session transcripts are `transcripts/<session-id>.jsonl`; each session's subagent transcripts are under `transcripts/<session-id>/subagents/`, with a `.meta.json` naming the agent. Done when you know how many `winget-config-maintainer` and `meta-reviewer` runs there are, which sessions started them, their date range, and which Claude Code versions wrote them. With no branch or no such runs yet, say so and review the workflow's files on their own.
 
 2. **Learn the workflow.** Read the files in [Scope](#scope): `.claude/skills/prd-to-winget-config/`, `.claude/agents/winget-config-maintainer.md`, `.claude/hooks/guard-winget-config.sh`, `.claude/settings.json` and this file. Also read the files they point to, and their `git log --stat`. Done when you can say what each one does in the workflow, and what changed in them since the last review.
 
-3. **Digest** the transcripts with the [digest script](#digest-script), and keep to what's in scope: the `winget-config-maintainer` runs, and in the sessions that started them, the Agent call and the report it got back. Read the raw events behind each flag by line (`sed -n '<line>p' <file>`); whole transcripts run to megabytes. Done when every flagged event in scope is explained or set aside as noise.
+3. **Digest** the transcripts with the [digest script](#digest-script), keeping to [Scope](#scope). Read the events behind each flag with its timeline mode; single lines run to hundreds of kilobytes, so don't print them whole. Done when every flagged event in scope is explained or set aside as noise.
 
 4. **Find what recurs**, using the [signals](#signals). Done when each pattern has its evidence (file and line), how often it appears, and a root cause in a specific file, or in a file that should exist.
 
-5. **Follow up** on earlier reviews. Your past reports are the results of Agent calls with `subagent_type` `meta-reviewer` in the session transcripts. Check `git log` for which recommendations were applied, and the transcripts since for whether the friction they targeted dropped. Done when each earlier recommendation is marked worked, didn't work, not applied, or too early to tell.
+5. **Follow up** on earlier reviews. Your past reports are the `SubagentHandback` calls in earlier `meta-reviewer` subagent transcripts, which the digest lists under "handback sent"; when you run in the background, the Agent call's result only says you launched. Check `git log` for which recommendations were applied, and the transcripts since for whether the friction they targeted dropped. Done when each earlier recommendation is marked worked, didn't work, not applied, or too early to tell.
 
 6. **Recommend** changes that meet [what good looks like](#what-good-looks-like). Done when each one names the file, the exact edit, its evidence, and the signal the next review should check.
 
@@ -68,12 +67,13 @@ Count only signals that trace back to the workflow in [Scope](#scope); the same 
 
 ## Digest script
 
-Transcript JSONL changes between Claude Code versions, so this script assumes no fixed schema. It skips lines it can't parse, finds tool calls and results wherever they nest, and lists every event type it saw, so new shapes stand out. When it misses something you found by hand, adapt it for this run and put the change in your self-review.
+Transcript JSONL changes between Claude Code versions, so this script assumes no fixed schema. It skips lines it can't parse, finds tool calls and results wherever they nest, and lists every event type it saw, so new shapes stand out. It also lists the reports subagents hand back, the user's answers to questions, and failures inside results that aren't marked as errors. Save it to a file in your scratchpad, then run `python3 -I <file> <folder>` for a digest of every transcript under the folder, or `python3 -I <file> <transcript> FROM TO` for those lines as a timeline. When it misses something you found by hand, adapt it for this run and put the change in your self-review.
 
-```bash
-python3 -I - "$dir" <<'EOF'
-import collections, json, sys
+```python
+import collections, json, re, sys
 from pathlib import Path
+
+FAILED = re.compile(r"HTTP [45]\d\d|403 Forbidden|not enabled for this session|Traceback \(most recent|\[rejected\]")
 
 def dicts(node):
     """Every dict nested anywhere in node, so blocks are found wherever a version puts them."""
@@ -93,6 +93,24 @@ def text(value, limit=160):
         value = " ".join(text(v, limit) for v in value)
     return " ".join(str(value).split())[:limit]
 
+def events(path):
+    for n, line in enumerate(path.open(encoding="utf-8", errors="replace"), 1):
+        try:
+            event = json.loads(line)
+        except ValueError:
+            event = None
+        yield n, event if isinstance(event, dict) else None
+
+if len(sys.argv) == 4 and sys.argv[2].isdigit() and sys.argv[3].isdigit():  # FILE FROM TO: a timeline
+    for n, event in events(Path(sys.argv[1])):
+        if int(sys.argv[2]) <= n <= int(sys.argv[3]) and event:
+            content = (event.get("message") or {}).get("content") if isinstance(event.get("message"), dict) else None
+            blocks = content if isinstance(content, list) else [{"text": content}] if content else []
+            parts = [f"{b['name']} {json.dumps(b.get('input'))[:400]}" if b.get("type") == "tool_use"
+                     else text(b.get("content") or b.get("text") or "", 400) for b in blocks if isinstance(b, dict)]
+            print(f"L{n} {str(event.get('timestamp'))[11:19]} {event.get('type')}: {' | '.join(filter(None, parts))}")
+    sys.exit()
+
 paths = [p for arg in map(Path, sys.argv[1:]) for p in (sorted(arg.rglob("*.jsonl")) if arg.is_dir() else [arg])]
 for path in paths:
     try:
@@ -102,13 +120,9 @@ for path in paths:
     kinds, tools, calls, names = collections.Counter(), collections.Counter(), collections.Counter(), {}
     found = collections.defaultdict(list)
     versions, stamps, bad, n = set(), [], 0, 0
-    for n, line in enumerate(path.open(encoding="utf-8", errors="replace"), 1):
-        try:
-            event = json.loads(line)
-        except ValueError:
+    for n, event in events(path):
+        if event is None:
             bad += 1
-            continue
-        if not isinstance(event, dict):
             continue
         kinds["/".join(str(event[k]) for k in ("type", "subtype") if event.get(k)) or "?"] += 1
         if event.get("version"):
@@ -116,9 +130,15 @@ for path in paths:
         if isinstance(event.get("timestamp"), str):
             stamps.append(event["timestamp"])
         message = event.get("message") if isinstance(event.get("message"), dict) else {}
-        if event.get("type") == "user" and isinstance(message.get("content"), str) and not event.get("isMeta"):
+        origin = event.get("origin") if isinstance(event.get("origin"), dict) else {}
+        if origin.get("handback"):
+            found["handbacks received"].append(f"L{n}: {origin.get('name')}: {text(origin.get('handbackReportText'), 300)}")
+        elif event.get("type") == "user" and isinstance(message.get("content"), str) and not event.get("isMeta"):
             label = "injected messages" if message["content"].lstrip().startswith("<") else "user prompts"
             found[label].append(f"L{n}: {text(message['content'], 300)}")
+        result = event.get("toolUseResult") if isinstance(event.get("toolUseResult"), dict) else {}
+        if isinstance(result.get("answers"), dict):
+            found["user answers"].append(f"L{n}: {text(list(result['answers'].values()), 300)}")
         if event.get("toolDenialKind"):
             found["denials"].append(f"L{n}: {event['toolDenialKind']}")
         if event.get("hookErrors"):
@@ -132,8 +152,12 @@ for path in paths:
                 calls[(block["name"], json.dumps(params, sort_keys=True, default=str))] += 1
                 if params.get("subagent_type"):
                     found["subagent calls"].append(f"L{n}: {params['subagent_type']}: {text(params.get('description'), 80)}")
+                if block["name"] == "SubagentHandback":
+                    found["handback sent"].append(f"L{n}: {text(params.get('message'), 300)}")
             elif kind == "tool_result" and block.get("is_error"):
                 found["tool errors"].append(f"L{n}: {names.get(block.get('tool_use_id'), '?')}: {text(block.get('content'))}")
+            elif kind == "tool_result" and names.get(block.get("tool_use_id")) != "Read" and (hit := FAILED.search(text(block.get("content"), 10**6))):
+                found["failures in results"].append(f"L{n}: {names.get(block.get('tool_use_id'), '?')}: ...{hit.group(0)}...")
             elif kind == "text" and "[Request interrupted by user" in str(block.get("text")):
                 found["interruptions"].append(f"L{n}")
     repeats = [f"{name} x{count}" for (name, _), count in calls.items() if count >= 3]
@@ -147,7 +171,6 @@ for path in paths:
         print(f"{label} ({len(items)}):")
         for item in items[:40]:
             print("  " + item)
-EOF
 ```
 
 ## Report
