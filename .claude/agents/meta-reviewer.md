@@ -89,7 +89,7 @@ for path in paths:
     try:
         agent = json.loads(path.with_name(path.stem + ".meta.json").read_text()).get("agentType", "?")
     except (OSError, ValueError, AttributeError):
-        agent = "subagent" if path.parent.name == "subagents" else "session"
+        agent = "subagent" if "subagents" in path.parts else "session"
     kinds, tools, calls, names = collections.Counter(), collections.Counter(), collections.Counter(), {}
     found = collections.defaultdict(list)
     versions, stamps, bad, n = set(), [], 0, 0

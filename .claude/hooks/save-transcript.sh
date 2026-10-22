@@ -88,9 +88,13 @@ fi
 
 copy() { mkdir -p "${2%/*}" && { cmp -s "$1" "$2" || cp "$1" "$2"; }; }
 copy "$transcript" "$worktree/transcripts/$session.jsonl"
-for file in "${transcript%.jsonl}"/subagents/*.jsonl "${transcript%.jsonl}"/subagents/*.meta.json; do
-  [[ -f $file ]] && copy "$file" "$worktree/transcripts/$session/subagents/${file##*/}"
-done
+# Subagent transcripts can sit in nested folders, so walk the whole tree.
+subagents=${transcript%.jsonl}/subagents
+if [[ -d $subagents ]]; then
+  while IFS= read -r -d '' file; do
+    copy "$file" "$worktree/transcripts/$session/subagents/${file#"$subagents"/}"
+  done < <(find "$subagents" -type f \( -name '*.jsonl' -o -name '*.meta.json' \) -print0)
+fi
 
 wt add -- "transcripts/$session.jsonl"
 [[ -d $worktree/transcripts/$session ]] && wt add -A -- "transcripts/$session"
