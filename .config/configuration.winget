@@ -110,28 +110,25 @@ properties:
       dependsOn:
         - wsl
       directives:
-        description: "[APP-10, RUN-01] Install or upgrade Ubuntu 24.04 LTS for WSL"
+        description: "[APP-10] Install Ubuntu 24.04 LTS for WSL"
         securityContext: elevated
       settings:
         id: Canonical.Ubuntu.2404
         source: winget
-        UseLatest: true
     - resource: Microsoft.WinGet.DSC/WinGetPackage
       directives:
-        description: "[APP-11, RUN-01] Install or upgrade Docker Desktop"
+        description: "[APP-11] Install Docker Desktop"
         securityContext: elevated
       settings:
         id: Docker.DockerDesktop
         source: winget
-        UseLatest: true
     - resource: Microsoft.WinGet.DSC/WinGetPackage
       directives:
-        description: "[APP-12, RUN-01] Install or upgrade Steam"
+        description: "[APP-12] Install Steam"
         securityContext: elevated
       settings:
         id: Valve.Steam
         source: winget
-        UseLatest: true
     - resource: Microsoft.WinGet.DSC/WinGetPackage
       directives:
         description: "[APP-13, RUN-01] Install or upgrade Battle.net"
