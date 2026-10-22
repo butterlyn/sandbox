@@ -16,7 +16,8 @@ Deleting a requirement doesn't undo it on the PC; to remove an app, list it unde
 
 ## Reruns
 
-- **RUN-01** Every run also upgrades each app under [Apps to install](#apps-to-install) to its latest version
+- **RUN-01** Every run also upgrades each app under [Apps to install](#apps-to-install) to its latest version, except Ubuntu (APP-10), Docker Desktop (APP-11) and Steam (APP-12)
+  - Note: if an upgrade fails, WinGet uninstalls and reinstalls the app, which for those three would delete the Ubuntu files, Docker's containers and images, and Steam's installed games. Steam and Docker Desktop update themselves, and Ubuntu's software updates through apt inside Linux.
 
 ## System
 
