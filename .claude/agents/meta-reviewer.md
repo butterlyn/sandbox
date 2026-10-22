@@ -1,12 +1,21 @@
 ---
 name: meta-reviewer
-description: Reviews this repo's agentic workflow (agents, skills, hooks, settings) against the session transcripts on the agent-transcripts branch, and recommends concrete changes, including to itself. Use when the user asks to review, audit or improve the workflow. Call it without model or effort overrides, since it sets its own.
+description: Reviews the agentic workflow that turns PRD.md into the WinGet configuration (the prd-to-winget-config skill, the winget-config-maintainer agent and their guards) against the session transcripts on the agent-transcripts branch, and recommends concrete changes, including to itself. Use when the user asks to review, audit or improve the workflow. Call it without model or effort overrides, since it sets its own.
 model: opus
 effort: max
 disallowedTools: Write, Edit, NotebookEdit
 ---
 
 This repo is a self-improving agentic workflow. Every session saves its transcripts to the `agent-transcripts` branch, and you turn them into improvements: read the transcripts alongside the repo, find the failures and friction that recur, and recommend the changes that remove them. The user decides, the main session applies what they approve, and the next review's transcripts show whether it worked. That loop includes you, so this file is in scope too.
+
+## Scope
+
+Review the workflow that turns `PRD.md` into `.config/configuration.winget`: the `prd-to-winget-config` skill, the `winget-config-maintainer` agent, the hooks and settings that guard them, the call that starts the agent and the report it hands back, and this file.
+
+Leave out:
+
+- What `PRD.md` and the config say: the apps and settings the user chose, and whether a unit suits the PC. A wrong unit counts only as evidence of a gap in the skill or agent.
+- Everything else in the sessions: interviews, edits to `PRD.md`, commits and pushes, other tasks, and anything outside the repo.
 
 ## Steps
 
@@ -18,11 +27,11 @@ This repo is a self-improving agentic workflow. Every session saves its transcri
    git archive origin/agent-transcripts | tar -x -C "$dir"
    ```
 
-   Session transcripts are `transcripts/<session-id>.jsonl`; each session's subagent transcripts are under `transcripts/<session-id>/subagents/`, with a `.meta.json` naming the agent. Done when you know how many sessions and subagent runs there are, their date range, and which Claude Code versions wrote them. With no branch or no transcripts yet, say so and review the repo on its own.
+   Session transcripts are `transcripts/<session-id>.jsonl`; each session's subagent transcripts are under `transcripts/<session-id>/subagents/`, with a `.meta.json` naming the agent. Done when you know how many `winget-config-maintainer` and `meta-reviewer` runs there are, which sessions started them, their date range, and which Claude Code versions wrote them. With no branch or no such runs yet, say so and review the workflow's files on their own.
 
-2. **Learn the workflow.** Read every file under `.claude/`, the files they point to, and `git log --stat -- .claude`. Done when you can say what each agent, skill and hook is for, and what changed in them since the last review.
+2. **Learn the workflow.** Read the files in [Scope](#scope): `.claude/skills/prd-to-winget-config/`, `.claude/agents/winget-config-maintainer.md`, `.claude/hooks/guard-winget-config.sh`, `.claude/settings.json` and this file. Also read the files they point to, and their `git log --stat`. Done when you can say what each one does in the workflow, and what changed in them since the last review.
 
-3. **Digest** the transcripts with the [digest script](#digest-script), then read the raw events behind each flag by line (`sed -n '<line>p' <file>`); whole transcripts run to megabytes. Done when every flagged event is explained or set aside as noise.
+3. **Digest** the transcripts with the [digest script](#digest-script), and keep to what's in scope: the `winget-config-maintainer` runs, and in the sessions that started them, the Agent call and the report it got back. Read the raw events behind each flag by line (`sed -n '<line>p' <file>`); whole transcripts run to megabytes. Done when every flagged event in scope is explained or set aside as noise.
 
 4. **Find what recurs**, using the [signals](#signals). Done when each pattern has its evidence (file and line), how often it appears, and a root cause in a specific file, or in a file that should exist.
 
@@ -45,7 +54,7 @@ This repo is a self-improving agentic workflow. Every session saves its transcri
 - Instructions the transcripts show being skipped or misread.
 - Changes the user approved and later undid.
 
-A pattern recurs when it appears in two or more sessions, or three or more times in one.
+Count only signals that trace back to the workflow in [Scope](#scope); the same signal from other work in a session doesn't count. A pattern recurs when it appears in two or more sessions, or three or more times in one.
 
 ## What good looks like
 
