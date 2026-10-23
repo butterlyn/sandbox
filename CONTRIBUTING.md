@@ -32,14 +32,70 @@ doesn't call it "every other file"._
 
 ## Diagram
 
-_A Mermaid diagram of the files and how they relate, laid
-out with ELK. It shows `README.md` and `CLAUDE.md` leading
-here, `GLOSSARY.md` defining the terms, this file setting
-the rules, the requirements tree, the contract on the
-boundary, the steering keywords and how binding each is, and
-the implementation, each in its space. Each arrow is labeled
-with its relationship, and colors show the three kinds of
-ownership, with a legend. Renders on GitHub._
+```mermaid
+---
+config:
+  layout: elk
+---
+flowchart TD
+    subgraph LEGEND["Ownership"]
+        direction LR
+        HUMAN_OWNED["Human-owned"] ~~~ SHARED_OWNERSHIP["Shared ownership"] ~~~ AGENT_OWNED["Agent-owned"]
+    end
+    LEGEND ~~~ README
+
+    README@{ shape: doc, label: "README.md" }
+    CLAUDE@{ shape: doc, label: "CLAUDE.md" }
+    GLOSSARY@{ shape: doc, label: "GLOSSARY.md" }
+    CONTRIBUTING@{ shape: doc, label: "CONTRIBUTING.md" }
+
+    README -->|"links to"| CONTRIBUTING
+    CLAUDE -->|"points agents to"| CONTRIBUTING
+    GLOSSARY -->|"defines the terms used in"| CONTRIBUTING & SPACES
+    CONTRIBUTING -.->|"sets the rules for"| SPACES
+
+    subgraph SPACES["The two spaces"]
+        subgraph PROBLEM["Problem space"]
+            subgraph REQUIREMENTS["REQUIREMENTS.md"]
+                TOP["Top-level requirement"]
+                LEAF["Derived requirement<br/><i>sufficient as stated</i>"]
+                BRANCH["Derived requirement<br/><i>needs more detail</i>"]
+                CHILD["Derived requirement<br/><i>more detail</i>"]
+            end
+        end
+
+        subgraph BOUNDARY["Boundary"]
+            CONTRACT@{ shape: doc, label: "CONTRACT.md<br/><i>narrow interface</i>" }
+        end
+
+        subgraph SOLUTION["Solution space"]
+            subgraph STEERING["STEERING.md"]
+                ALWAYS_NEVER["ALWAYS / NEVER<br/><i>no departure</i>"]
+                FAVOR_DISFAVOR["FAVOR / DISFAVOR<br/><i>departure needs a stated reason</i>"]
+                CONSIDER["CONSIDER<br/><i>can be ignored</i>"]
+                ALWAYS_NEVER ~~~ FAVOR_DISFAVOR ~~~ CONSIDER
+            end
+            IMPLEMENTATION@{ shape: docs, label: "Implementation<br/><i>approach and technology chosen by the agent</i>" }
+        end
+    end
+
+    TOP -->|"broken down into<br/>(child cites parent's ID)"| LEAF
+    TOP -->|"broken down into<br/>(child cites parent's ID)"| BRANCH
+    BRANCH -->|"broken down into<br/>(child cites parent's ID)"| CHILD
+    REQUIREMENTS -->|"derived into, as a whole"| CONTRACT
+    CONTRACT -->|"implemented by"| IMPLEMENTATION
+    REQUIREMENTS -->|"every requirement met by"| IMPLEMENTATION
+    STEERING -->|"guides"| IMPLEMENTATION
+
+    classDef human fill:#d0e6f5,stroke:#0072b2,stroke-width:2px,color:#0b2540
+    classDef shared fill:#fde7b8,stroke:#b07a00,stroke-width:2px,color:#2d1f00
+    classDef agent fill:#f5d5e6,stroke:#a64f86,stroke-width:2px,color:#34112a
+    classDef group fill:none,stroke:#8c959f
+    class HUMAN_OWNED,TOP,ALWAYS_NEVER,FAVOR_DISFAVOR,CONSIDER human
+    class SHARED_OWNERSHIP,README,CLAUDE,GLOSSARY,CONTRIBUTING,LEAF,BRANCH,CHILD,CONTRACT shared
+    class AGENT_OWNED,IMPLEMENTATION agent
+    class LEGEND,SPACES,PROBLEM,REQUIREMENTS,BOUNDARY,SOLUTION,STEERING group
+```
 
 ## The two spaces
 
