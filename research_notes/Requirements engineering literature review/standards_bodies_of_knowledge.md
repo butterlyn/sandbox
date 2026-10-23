@@ -104,7 +104,8 @@ Its 2011 first edition replaced IEEE 830-1998, IEEE 1233-1998 and IEEE 1362-1998
 - Status: **current**. The 2015 edition is withdrawn (ISO page via search extract) ([ISO 15288:2015](https://www.iso.org/standard/63711.html)). Confidence: Med.
 - Changes from 2015 (ISO Online Browsing Platform via search extract): revised technical processes, including architecture definition, integration and operation; updated key concepts (iteration, recursion, systems of systems); and a new annex on model-based systems engineering ([ISO 15288:2023](https://www.iso.org/standard/81702.html)). Confidence: Med.
 - RE contribution:
-  - The SEBoK attributes its definitions of stakeholder needs and stakeholder requirements to ISO/IEC/IEEE 15288:2023 §6.4.2, and notes that business or mission analysis is often performed iteratively with stakeholder needs definition ([SEBoK, Stakeholder Needs Definition](https://sebokwiki.org/wiki/Stakeholder_Needs_Definition)).
+  - The SEBoK notes that business or mission analysis is often performed iteratively with stakeholder needs definition, and that stakeholder needs are the basis of system validation and an input to system requirements definition ([SEBoK, Stakeholder Needs Definition](https://sebokwiki.org/wiki/Stakeholder_Needs_Definition), via search extract).
+  - The SEBoK glossary attributes its definitions of stakeholder needs and stakeholder requirements to ISO/IEC/IEEE 15288:2023 §6.4.2. This came from a search extract; the glossary page URL was not verified.
   - System requirements definition "transform[s] the stakeholder view of desired capabilities into a technical, developer view", per the SEBoK's summary of 15288-2023 ([SEBoK, System Requirements Definition](https://sebokwiki.org/wiki/System_Requirements_Definition)). Confidence: Med (secondary, via search extract).
 - Companion: ISO/IEC/IEEE 24748-2:2024 gives guidelines for applying 15288 ([ISO 24748-2:2024](https://www.iso.org/standard/84661.html), via search extract).
 
@@ -331,7 +332,7 @@ All appear current.
     - "functional requirements: describe the capabilities that a solution must have in terms of the behaviour and information that the solution will manage";
     - "non-functional requirements or quality of service requirements: … describe conditions under which a solution must remain effective or qualities that a solution must have".
   - "Transition requirements: … to facilitate transition from the current state to the future state, but which are not needed once the change is complete… [e.g.] data conversion, training, and business continuity."
-- IIBA describes Requirements Analysis and Design Definition as incremental and iterative activities that transform needs into a recommended solution. Requirements Life Cycle Management covers managing and maintaining requirements and design information from inception to retirement, including tracing, prioritising, impact assessment of changes and approval (IIBA pages via search extract) ([IIBA Business Analysis Standard](https://www.iiba.org/knowledgehub/the-business-analysis-standard/)). Confidence: Med.
+- IIBA describes Requirements Analysis and Design Definition as incremental and iterative activities that transform needs into a recommended solution. Requirements Life Cycle Management covers managing and maintaining requirements and design information from inception to retirement (IIBA Business Analysis Standard pages via search extract; the KnowledgeHub requires login) ([IIBA Business Analysis Standard](https://www.iiba.org/knowledgehub/the-business-analysis-standard/)). Confidence: Med. The individual BABOK v3 task names within each knowledge area (e.g., trace, maintain, prioritise, assess changes, approve) were **not verified** from an opened source.
 
 **Reference entry: IIBA "The Business Analysis Standard"** (the post-v3 IIBA direction)
 - Blog dated 25 February 2025: "The Standard is designed to complement the BABOK Guide, not replace it"; "IIBA has shifted from creating a single, expanded book to developing a modular, adaptable ecosystem of resources"; it is a "continuously updated resource" ([IIBA blog](https://www.iiba.org/business-analysis-blogs/the-updated-business-analysis-standard-your-foundation-for-success/)). Confidence: High.
@@ -699,7 +700,8 @@ One official link per item. Evidence and confidence for each row are in the sect
 | FDA QMSR, 21 CFR 820 (incorporates ISO 13485:2016; ex-§820.30) | Final rule 2 Feb 2024; **effective 2 Feb 2026** | US FDA | In force | https://www.fda.gov/medical-devices/postmarket-requirements-devices/quality-management-system-regulation-qmsr | 8 |
 | OMG ReqIF | 1.2, Jul 2016 | OMG | Current | https://www.omg.org/spec/ReqIF | 9 |
 | OMG SysML | 2.0 (formal Sep 2025; final adoption announced 21 Jul 2025); 1.7 (Jun 2024) | OMG | Current | https://www.omg.org/spec/SysML | 9 |
-| RFC 2119 + RFC 8174 (BCP 14) | Mar 1997 + May 2017 | IETF | Current | https://www.rfc-editor.org/info/rfc2119 | 9 |
+| RFC 2119 *Key words for use in RFCs to Indicate Requirement Levels* (BCP 14) | Mar 1997 | IETF | Current (updated by RFC 8174) | https://www.rfc-editor.org/info/rfc2119 | 9 |
+| RFC 8174 *Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words* (BCP 14) | May 2017 | IETF | Current | https://www.rfc-editor.org/info/rfc8174 | 9 |
 | ITU-T Z.151 URN (GRL + UCM) | 10/2018 | ITU-T | In force | https://www.itu.int/rec/T-REC-Z.151-201810-I/en | 9 |
 | EARS | 2009 (RE'09) | IEEE (conference paper) | Widely used notation | https://doi.org/10.1109/RE.2009.9 | 9 |
 | ISO/IEC TR 24766 *Guide for RE tool capabilities* | 2009 | ISO/IEC | Status unconfirmed | https://www.iso.org/standard/51041.html | 10 |
