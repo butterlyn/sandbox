@@ -671,7 +671,9 @@ One official link per item. Evidence and confidence for each row are in the sect
 | Item | Current edition / year | Publisher | Status (Oct 2026) | Official link | § |
 |---|---|---|---|---|---|
 | ISO/IEC/IEEE 29148 *Requirements engineering* | 2018 (Ed. 2) | ISO/IEC JTC 1/SC 7 + IEEE CS | Current; Ed. 3 at DIS; IEEE P29148 PAR 2025-09-10 | https://www.iso.org/standard/72089.html | 1 |
-| IEEE 830-1998 / 1233-1998 / 1362-1998 | 1998 | IEEE | Superseded by 29148:2011 | https://standards.ieee.org/ieee/830/1222/ | 1 |
+| IEEE 830-1998 *Recommended Practice for SRS* | 1998 | IEEE | Superseded by 29148:2011 | https://standards.ieee.org/ieee/830/1222/ | 1 |
+| IEEE 1233-1998 *Guide for Developing System Requirements Specifications* | 1998 | IEEE | Superseded by 29148:2011 | https://standards.ieee.org/ieee/1233/1879/ | 1 |
+| IEEE 1362-1998 *Guide for … Concept of Operations (ConOps) Document* | 1998 | IEEE | Superseded by 29148:2011 | https://standards.ieee.org/ieee/1362/2047/ | 1 |
 | ISO/IEC/IEEE 15288 *System life cycle processes* | 2023 (Ed. 2) | ISO/IEC + IEEE | Current | https://www.iso.org/standard/81702.html | 2 |
 | ISO/IEC/IEEE 12207 *Software life cycle processes* | **2026** (IEEE pub. 2026-04-15) | ISO/IEC + IEEE | Current; 2017 withdrawn 2026-04-29 | https://www.iso.org/standard/90219.html | 2 |
 | ISO/IEC/IEEE 24765 *Vocabulary* (+ SEVOCAB) | 2017 | ISO/IEC + IEEE | Current; Ed. 3 CD cancelled | https://www.iso.org/standard/71952.html | 2 |
