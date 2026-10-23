@@ -186,9 +186,10 @@ How far these shifts reach practice is largely unmeasured. No adoption figures w
 ## Assumptions and scope
 
 - **Scope:** RE for software-intensive systems from the 1970s to 23 October 2026, read as a field-level history. Architecture and implementation appear only where they meet requirements.
-- **Selection:** works come from nine themed research notes, ranked by the researchers using citation snapshots and judgement. Each is discussed mainly in one section.
+- **Emphasis:** weighted towards what a specifier needs — collecting, structuring and judging requirements, and the what-versus-how debate — over project and process management.
+- **Selection:** works were chosen in nine themed research passes (notes in `research_notes/`), ranked by citation snapshots and judgement. Each is discussed mainly in one section.
 - **Currency:** editions and statuses are as of 23 October 2026. Where iso.org, incose.org and some publishers blocked automated checks, statuses rest on IEEE pages, official previews or search extracts.
 - **Exclusions:** AI agents, LLM-driven and "spec-driven" development are out of scope; AI appears only as RE research topics. Domain regulations get one sentence; vendor surveys and market-share data were not used.
-- **Links:** DOIs where recorded, otherwise official publisher, standards-body or author pages; some titles drop subtitles. Links to iso.org, incose.org, EUR-Lex and ACM (Bell & Thayer, which has no DOI) are official pages the researchers could not open.
+- **Links:** DOIs where available, otherwise official publisher, standards-body or author pages; some titles drop subtitles. All links were checked on 23 October 2026: DOIs against Crossref, other pages by their titles. Links to iso.org, incose.org, EUR-Lex and ACM (Bell & Thayer, which has no DOI) are official pages that block automated checks.
 - **Unverified details:** 29148:2018's exact characteristic wording is paywalled. Wiegers' levels and Cockburn's template come from secondary summaries. Wiley dates the INCOSE manual 2024, but the book carries a 2025 copyright.
 - **Evidence caveats:** most RE evidence is small, qualitative, student-based or self-reported, and rarely replicated; surveys use convenience samples. CHAOS and "100×" figures appear only as contested claims.
